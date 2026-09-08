@@ -1,0 +1,54 @@
+/**
+ * Çap — ähli kompýuterlerde birmeňzeş görnüş.
+ * Ölçegler (gönüden seredilende): çep 1.5sm, sag 1sm.
+ * Brauzer çap dialogynda: kagyz A4, Masştab/Scale = 100%,
+ * Fields/колонтитулы öçük, Margins = Default.
+ */
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body.print-locked,
+body.packet-print {
+  font-family: "Times New Roman", Times, "Liberation Serif", serif !important;
+}
+
+@media print {
+  html,
+  body {
+    zoom: 1 !important;
+    transform: none !important;
+    -webkit-text-size-adjust: 100% !important;
+    text-size-adjust: 100% !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Brauzer zoom / DPI täsirini azalt */
+  * {
+    -webkit-font-smoothing: antialiased;
+  }
+
+  img {
+    max-width: 100% !important;
+    image-rendering: auto;
+  }
+}
+
+/* Toolbar kömek — ekranda */
+.no-print .print-hint {
+  flex: 1 1 100%;
+  margin: 4px 0 0;
+  font-family: "Segoe UI", sans-serif;
+  font-size: 0.78rem;
+  font-weight: 500;
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.no-print .print-hint strong {
+  color: #ffe6a0;
+  font-weight: 700;
+}

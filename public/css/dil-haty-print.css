@@ -1,0 +1,99 @@
+/* Dil haty + Ynanç haty — Word şablony ýaly, bir A4 sahypada */
+#dil-haty-page .title {
+  margin: 0 0 10px;
+  font-size: 14pt;
+}
+
+.dh-contract-no {
+  text-align: center;
+  margin: 0 0 10px;
+  font-size: 12pt;
+  text-indent: 0;
+  font-weight: 400;
+}
+
+.dh-section {
+  margin: 0;
+}
+
+.dh-section--ynanc {
+  margin-top: 2.5cm;
+  padding-top: 0;
+}
+
+.dh-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  margin: 0 0 14px;
+  font-size: 12pt;
+}
+
+.dh-date {
+  white-space: nowrap;
+  font-weight: 700;
+}
+
+.dh-line,
+.dh-para,
+.dh-body {
+  text-align: justify;
+  margin: 0 0 6px;
+  text-indent: 0;
+  line-height: 1.4;
+  font-size: 12pt;
+}
+
+.dh-blank {
+  letter-spacing: 0.02em;
+  white-space: pre;
+}
+
+.dh-fill {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.dh-warning {
+  margin: 12px 0 16px;
+  font-weight: 700;
+  text-indent: 0;
+  text-align: justify;
+  font-size: 12pt;
+  line-height: 1.4;
+}
+
+.dh-sign {
+  margin-top: 18px;
+  text-indent: 0;
+  font-size: 12pt;
+  line-height: 1.4;
+}
+
+.dh-section--ynanc .dh-sign {
+  margin-top: 16px;
+}
+
+@media print {
+  #dil-haty-page .title {
+    margin-bottom: 8px;
+  }
+
+  .dh-section--ynanc {
+    margin-top: 2.5cm;
+  }
+
+  .dh-line,
+  .dh-body {
+    margin-bottom: 5px;
+  }
+
+  .dh-warning {
+    margin: 10px 0 14px;
+  }
+
+  .dh-sign {
+    margin-top: 14px;
+  }
+}

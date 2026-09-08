@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="tk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Giriş — Kerwen Agenstwa</title>
+  <link rel="icon" type="image/png" href="/assets/favicon.png">
+  <link rel="apple-touch-icon" href="/assets/favicon.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="stylesheet" href="/css/style.css?v=109">
+  <script src="/js/fit-screen.js?v=3" defer></script>
+</head>
+<body data-brand-page="login">
+  <div class="login-page">
+    <div class="login-box">
+      <img src="/assets/logo.png" alt="Kerwen" data-brand-logo>
+      <h2 data-brand="panel">Kerwen Panel</h2>
+      <p class="login-sub">Admin we operator — her gezek ulanyjy ady we parol gerek</p>
+      <div id="alert-box"></div>
+      <form id="login-form">
+        <div class="form-group" style="text-align:left">
+          <label>Ulanyjy ady</label>
+          <input type="text" name="username" required placeholder="operator">
+        </div>
+        <div class="form-group" style="text-align:left">
+          <label>Parol</label>
+          <input type="password" name="password" required>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%">Girmek</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="/js/branding.js?v=2"></script>
+  <script src="/js/api.js?v=14"></script>
+  <script>
+    (function () {
+      // Her gezek giriş — öňki sessiýany aýyr, awtomatik panel açma
+      if (window.Auth) Auth.clear();
+      else {
+        try {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          sessionStorage.removeItem('token');
+          sessionStorage.removeItem('user');
+        } catch (_) { /* ignore */ }
+      }
+    })();
+
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const alertBox = document.getElementById('alert-box');
+      const form = new FormData(e.target);
+      const username = (form.get('username') || '').trim();
+      const password = form.get('password') || '';
+
+      if (!username || !password) {
+        showAlert(alertBox, 'Ulanyjy adyny we paroly dolduryň', 'error');
+        return;
+      }
+
+      try {
+        const res = await api.post('/auth/login', { username, password });
+        Auth.setSession(res.data.token, res.data.user);
+        window.location.href = '/admin/dashboard.html';
+      } catch (err) {
+        showAlert(alertBox, err.message, 'error');
+      }
+    });
+  </script>
+</body>
+</html>

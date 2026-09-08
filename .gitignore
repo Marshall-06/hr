@@ -1,0 +1,16 @@
+node_modules/
+.env
+data/mail-login.json
+public/uploads/*
+!public/uploads/.gitkeep
+public/uploads/_photo_link_tmp/
+certs/*.pfx
+certs/*.cer
+certs/*.pem
+certs/*.ps1
+!certs/.gitkeep
+*.log
+logs/
+backups/
+.server.pid
+.DS_Store

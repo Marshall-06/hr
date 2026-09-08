@@ -1,52 +1,167 @@
-const { Op } = require('sequelize');
+const { Op, where, cast, col, literal } = require('sequelize');
 const sequelize = require('../config/database');
-const { Anketa } = require('../models');
+const { Anketa, VacancyAssignment, Vacancy, Contract } = require('../models');
 const ApiError = require('../utils/ApiError');
 const {
   buildPagination,
-  buildSearchFilter,
   formatFullName,
   generateAnketaNumber,
+  isUniqueConstraintError,
 } = require('../utils/helpers');
+const { placedByUsReasonWhere } = require('../utils/placedByUs');
+const {
+  reconcileDesiredPositions,
+} = require('../utils/desiredPositions');
+const { parseBarYokFilter, buildHasCarWhere } = require('../utils/barYokFilter');
 
 const normalizePhone = (phone) => String(phone || '').replace(/\D/g, '');
+
+/** Bir ýa-da birnäçe nomer — hersi 9 san */
+function normalizePhoneField(phone) {
+  const raw = String(phone || '').trim();
+  if (!raw) return '';
+  let parts = raw.split(/[,;/|]+|\s+we\s+/i).map((p) => normalizePhone(p)).filter(Boolean);
+  if (parts.length <= 1) {
+    const all = normalizePhone(raw);
+    if (all.length > 9 && all.length % 9 === 0) {
+      parts = [];
+      for (let i = 0; i < all.length; i += 9) parts.push(all.slice(i, i + 9));
+    } else if (all) {
+      parts = [all];
+    }
+  }
+  if (!parts.length) return '';
+  const bad = parts.find((p) => p.length !== 9);
+  if (bad) {
+    throw new ApiError(400, `Telefon nomeri 9 san bolmaly (mysal: 8651234567). Nädogry: ${bad} (${bad.length} san)`);
+  }
+  return parts.slice(0, 2).join(', ');
+}
+
+function applyDesiredPositions(payload) {
+  const fixed = reconcileDesiredPositions(payload.desiredPosition, payload.extraData);
+  if (!fixed) return payload;
+  payload.desiredPosition = fixed.desiredPosition;
+  payload.extraData = fixed.extraData;
+  return payload;
+}
+
+const escapeLike = (s) => String(s).replace(/[%_\\]/g, '\\$&');
+
+/** Umumy gözleg — anketanyň ähli maglumatlary (JSON hem) */
+const ANKETA_TEXT_FIELDS = [
+  'familyName', 'firstName', 'patronymic', 'phone', 'email',
+  'desiredPosition', 'anketaNumber', 'registrationCity', 'registrationAddress',
+  'currentAddress', 'birthPlace', 'nationality', 'maritalStatus',
+  'educationLevel', 'drivingLicense', 'hasCar', 'militaryService',
+  'willingToRelocate', 'partTimeWork', 'workSchedule', 'currentSalary',
+  'closedReason', 'passportNumber', 'passportIssued', 'notes',
+];
+
+/** ENUM / san / sene — ILIKE üçin TEXT cast */
+const ANKETA_CAST_COLUMNS = [
+  'status',
+  'gender',
+  'birth_year',
+  'form_date',
+  'employment_date',
+];
+
+/** Sanaw — agyr JSON sütunlary ýükleme */
+const ANKETA_LIST_ATTRS = [
+  'id', 'anketaNumber', 'formDate', 'familyName', 'firstName', 'patronymic',
+  'desiredPosition', 'phone', 'email', 'gender', 'birthYear', 'status',
+  'registrationCity', 'currentAddress', 'educationLevel', 'hasCar',
+  'drivingLicense', 'currentSalary', 'employmentDate', 'closedReason',
+  'photoUrl', 'createdAt', 'updatedAt', 'statusChangedAt', 'extraData',
+  'maritalStatus', 'nationality', 'workSchedule', 'partTimeWork',
+  'willingToRelocate', 'militaryService', 'notes',
+];
+
+function buildAnketaSearchFilter(search) {
+  const raw = String(search || '').trim();
+  if (!raw) return {};
+
+  const tokens = raw.split(/\s+/).filter(Boolean).slice(0, 6);
+
+  const orForToken = (token) => {
+    const like = `%${escapeLike(token)}%`;
+    const ors = ANKETA_TEXT_FIELDS.map((field) => ({
+      [field]: { [Op.iLike]: like },
+    }));
+    // JSON sütunlaryny hemişe skanirleme — CPU ýüklenmesini azaltýar
+    ANKETA_CAST_COLUMNS.forEach((dbCol) => {
+      ors.push(where(cast(col(dbCol), 'TEXT'), { [Op.iLike]: like }));
+    });
+    return ors;
+  };
+
+  if (tokens.length === 1) {
+    return { [Op.or]: orForToken(tokens[0]) };
+  }
+  return {
+    [Op.and]: tokens.map((t) => ({ [Op.or]: orForToken(t) })),
+  };
+}
 
 class AnketaService {
   async getAll(query = {}) {
     const { page, limit, offset } = buildPagination(query);
-    const where = {
-      ...buildSearchFilter(
-        [
-          'familyName', 'firstName', 'patronymic', 'phone', 'desiredPosition',
-          'anketaNumber', 'registrationCity', 'currentAddress', 'educationLevel',
-          'closedReason', 'status', 'gender',
-        ],
-        query.search,
-      ),
+    const whereClause = {
+      ...buildAnketaSearchFilter(query.search),
     };
 
-    if (query.status) where.status = query.status;
-    if (query.gender) where.gender = { [Op.iLike]: `%${query.gender}%` };
+    if (query.status) whereClause.status = query.status;
+    if (query.gender) {
+      const g = String(query.gender).trim();
+      const fold = g.toLowerCase()
+        .replace(/ý/g, 'y').replace(/ä/g, 'a');
+      let values;
+      if (fold.startsWith('erkek')) values = ['Erkek'];
+      else if (fold.startsWith('gyz')) values = ['Gyz', 'Ayal'];
+      else if (fold.startsWith('ayal') || fold.startsWith('aýal')) values = ['Ayal', 'Gyz'];
+      else values = [g];
+      const andParts = Array.isArray(whereClause[Op.and])
+        ? whereClause[Op.and]
+        : whereClause[Op.and]
+          ? [whereClause[Op.and]]
+          : [];
+      andParts.push(where(cast(col('gender'), 'TEXT'), { [Op.in]: values }));
+      whereClause[Op.and] = andParts;
+    }
     if (query.desiredPosition) {
-      where.desiredPosition = { [Op.iLike]: `%${query.desiredPosition}%` };
+      const pos = String(query.desiredPosition).trim().replace(/[%_\\]/g, '\\$&');
+      const andParts = Array.isArray(whereClause[Op.and])
+        ? whereClause[Op.and]
+        : whereClause[Op.and]
+          ? [whereClause[Op.and]]
+          : [];
+      andParts.push({
+        [Op.or]: [
+          { desiredPosition: { [Op.iLike]: `%${pos}%` } },
+          // extra_data diňe desiredPositions üçin — doly JSON text däl
+          literal(`"Anketa"."extra_data"->>'desiredPositions' ILIKE '%${pos}%'`),
+        ],
+      });
+      whereClause[Op.and] = andParts;
     }
     if (query.phone) {
-      where.phone = { [Op.iLike]: `%${String(query.phone).trim()}%` };
+      whereClause.phone = { [Op.iLike]: `%${String(query.phone).trim()}%` };
     }
     if (query.anketaNumber) {
-      where.anketaNumber = { [Op.iLike]: `%${String(query.anketaNumber).trim()}%` };
+      whereClause.anketaNumber = { [Op.iLike]: `%${String(query.anketaNumber).trim()}%` };
     }
     if (query.familyName) {
-      where.familyName = { [Op.iLike]: `%${String(query.familyName).trim()}%` };
+      whereClause.familyName = { [Op.iLike]: `%${String(query.familyName).trim()}%` };
     }
     if (query.firstName) {
-      where.firstName = { [Op.iLike]: `%${String(query.firstName).trim()}%` };
+      whereClause.firstName = { [Op.iLike]: `%${String(query.firstName).trim()}%` };
     }
     if (query.faa) {
       const parts = String(query.faa).trim().split(/\s+/).filter(Boolean);
       if (parts.length) {
-        where[Op.and] = [
-          ...(where[Op.and] || []),
+        whereClause[Op.and] = [
+          ...(whereClause[Op.and] || []),
           ...parts.map((p) => ({
             [Op.or]: [
               { familyName: { [Op.iLike]: `%${p}%` } },
@@ -58,21 +173,39 @@ class AnketaService {
       }
     }
     if (query.dateFrom) {
-      where.formDate = { ...(where.formDate || {}), [Op.gte]: query.dateFrom };
+      whereClause.formDate = { ...(whereClause.formDate || {}), [Op.gte]: query.dateFrom };
     }
     if (query.dateTo) {
-      where.formDate = { ...(where.formDate || {}), [Op.lte]: query.dateTo };
+      whereClause.formDate = { ...(whereClause.formDate || {}), [Op.lte]: query.dateTo };
+    }
+    if (query.hasCar) {
+      const mode = parseBarYokFilter(query.hasCar);
+      if (mode) {
+        const andParts = Array.isArray(whereClause[Op.and])
+          ? whereClause[Op.and]
+          : whereClause[Op.and]
+            ? [whereClause[Op.and]]
+            : [];
+        const carWhere = buildHasCarWhere(sequelize, mode, 'has_car');
+        if (carWhere) andParts.push(carWhere);
+        if (andParts.length) whereClause[Op.and] = andParts;
+      }
     }
 
     const { rows, count } = await Anketa.findAndCountAll({
-      where,
+      where: whereClause,
+      attributes: ANKETA_LIST_ATTRS,
       limit,
       offset,
-      order: [['createdAt', 'DESC']],
+      // Täzeler ýokarda, köneler aşakda
+      order: [['createdAt', 'DESC'], ['id', 'DESC']],
     });
 
     return {
-      items: rows,
+      items: rows.map((row) => {
+        const j = row.toJSON ? row.toJSON() : row;
+        return applyDesiredPositions({ ...j, extraData: j.extraData || {} });
+      }),
       pagination: { page, limit, total: count, totalPages: Math.ceil(count / limit) },
     };
   }
@@ -81,6 +214,47 @@ class AnketaService {
     const anketa = await Anketa.findByPk(id);
     if (!anketa) throw new ApiError(404, 'Anketa tapylmady');
     return anketa;
+  }
+
+  /** Şol adam (telefon / passport) — beýleki anketa nusgalary */
+  async listRelated(anketa) {
+    if (!anketa) return [];
+    const id = Number(anketa.id);
+    const phone = normalizePhone(anketa.phone);
+    const passport = String(anketa.passportNumber || '').trim();
+    const or = [];
+    if (phone.length >= 9) {
+      or.push(
+        sequelize.where(
+          sequelize.fn('regexp_replace', sequelize.col('phone'), '[^0-9]', '', 'g'),
+          phone,
+        ),
+      );
+    }
+    if (passport) {
+      or.push({ passportNumber: { [Op.iLike]: passport } });
+    }
+    if (!or.length || !id) return [];
+
+    const rows = await Anketa.findAll({
+      where: {
+        id: { [Op.ne]: id },
+        [Op.or]: or,
+      },
+      attributes: ['id', 'anketaNumber', 'status', 'formDate', 'desiredPosition', 'statusChangedAt'],
+      order: [['id', 'DESC']],
+      limit: 20,
+    });
+    return rows.map((r) => (r.toJSON ? r.toJSON() : r));
+  }
+
+  async toPublic(anketa) {
+    const json = anketa.toJSON ? anketa.toJSON() : { ...anketa };
+    const relatedAnketas = await this.listRelated(anketa);
+    return {
+      ...applyDesiredPositions({ ...json, extraData: json.extraData || {} }),
+      relatedAnketas,
+    };
   }
 
   /**
@@ -97,7 +271,7 @@ class AnketaService {
 
     const notSelf = excludeId ? { id: { [Op.ne]: excludeId } } : {};
 
-    if (phone.length >= 8) {
+    if (phone.length >= 9) {
       const byPhone = await Anketa.findOne({
         where: {
           ...notSelf,
@@ -173,32 +347,67 @@ class AnketaService {
   }
 
   async create(data) {
-    await this.assertUnique(data);
-    const anketaNumber = data.anketaNumber || await generateAnketaNumber(Anketa);
-    return Anketa.create({
-      ...data,
-      anketaNumber,
-      formDate: data.formDate || new Date().toISOString().split('T')[0],
-    });
+    const payload = applyDesiredPositions({ ...data });
+    if (payload.phone !== undefined) payload.phone = normalizePhoneField(payload.phone);
+    const formDate = payload.formDate || (() => {
+      const d = new Date();
+      const p = (n) => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+    })();
+    const requestedNumber = payload.anketaNumber || null;
+    let anketaNumber = requestedNumber || await generateAnketaNumber(Anketa, formDate);
+    let lastErr = null;
+    for (let attempt = 0; attempt < 12; attempt++) {
+      try {
+        return await Anketa.create({
+          ...payload,
+          anketaNumber,
+          formDate,
+        });
+      } catch (err) {
+        lastErr = err;
+        if (requestedNumber || !isUniqueConstraintError(err)) throw err;
+        const m = String(anketaNumber).match(/^(.*\/)(\d+)(#del\d+)?$/);
+        anketaNumber = m ? `${m[1]}${Number(m[2]) + 1}` : await generateAnketaNumber(Anketa, formDate);
+      }
+    }
+    throw lastErr || new ApiError(409, 'Anketa belgesi eýýäm bar — täzeden synanyň');
   }
 
   async update(id, data) {
     const anketa = await this.getById(id);
-    const merged = {
-      familyName: data.familyName !== undefined ? data.familyName : anketa.familyName,
-      firstName: data.firstName !== undefined ? data.firstName : anketa.firstName,
-      patronymic: data.patronymic !== undefined ? data.patronymic : anketa.patronymic,
-      birthYear: data.birthYear !== undefined ? data.birthYear : anketa.birthYear,
-      phone: data.phone !== undefined ? data.phone : anketa.phone,
-      passportNumber: data.passportNumber !== undefined ? data.passportNumber : anketa.passportNumber,
-    };
-    await this.assertUnique(merged, id);
-    await anketa.update(data);
+    const incoming = applyDesiredPositions({ ...data });
+    if (incoming.phone !== undefined) incoming.phone = normalizePhoneField(incoming.phone);
+
+    const payload = { ...incoming };
+    if (payload.status !== undefined && payload.status !== anketa.status) {
+      payload.statusChangedAt = new Date();
+      if (payload.status === 'Isleyar') {
+        // Her ýapylanda täze sene — şol nusgany birnäçe gezek ýapyp bolýar
+        payload.employmentDate = incoming.employmentDate
+          || new Date().toISOString().slice(0, 10);
+      } else if (payload.status === 'Islanok') {
+        payload.employmentDate = null;
+        if (incoming.closedReason === undefined) payload.closedReason = null;
+      }
+    }
+
+    await anketa.update(payload);
     return anketa;
   }
 
   async remove(id) {
     const anketa = await this.getById(id);
+    await VacancyAssignment.destroy({ where: { anketaId: anketa.id } });
+    await Contract.destroy({ where: { anketaId: anketa.id } });
+    await Vacancy.update(
+      { assignedAnketaId: null, assignedCandidateName: null, assignmentStatus: null },
+      { where: { assignedAnketaId: anketa.id } },
+    );
+    await Vacancy.update(
+      { contactAnketaId: null },
+      { where: { contactAnketaId: anketa.id } },
+    );
     await anketa.destroy();
     return { message: 'Anketa pozuldy' };
   }
@@ -207,13 +416,58 @@ class AnketaService {
     const total = await Anketa.count();
     const isleyar = await Anketa.count({ where: { status: 'Isleyar' } });
     const islanok = await Anketa.count({ where: { status: 'Islanok' } });
-    return { total, isleyar, islanok };
+
+    // Biziň ýerleşdirenlerimiz: «Kabul edildi» ýa-da Excel ýaşyl / sebäp
+    const acceptedRows = await VacancyAssignment.findAll({
+      attributes: ['anketaId'],
+      where: { status: 'Kabul edildi' },
+      raw: true,
+    });
+    const placedByUsSet = new Set();
+    acceptedRows.forEach((r) => {
+      const id = Number(r.anketaId);
+      if (id > 0) placedByUsSet.add(id);
+    });
+
+    const byReason = await Anketa.findAll({
+      attributes: ['id'],
+      where: {
+        status: 'Isleyar',
+        ...placedByUsReasonWhere(),
+      },
+      raw: true,
+    });
+    byReason.forEach((r) => {
+      const id = Number(r.id);
+      if (id > 0) placedByUsSet.add(id);
+    });
+    const placedByUs = placedByUsSet.size;
+
+    // Özi işe ýerleşenler = Işleýär, ýöne biziň ýerleşdiren däl
+    const selfPlaced = placedByUsSet.size
+      ? await Anketa.count({
+        where: {
+          status: 'Isleyar',
+          id: { [Op.notIn]: [...placedByUsSet] },
+        },
+      })
+      : isleyar;
+
+    return {
+      total,
+      isleyar,
+      islanok,
+      placedByUs,
+      selfPlaced,
+    };
   }
 
   /** Ýapylma sebäpleri — default + bazadaky goşmaça ýazgylar */
   async getClosedReasons() {
     const defaults = [
-      'Işe ýerleşdi',
+      'Biziň ýerleşdirenlerimiz',
+      'Işe ýerleşenler',
+      'Özi işe ýerleşenler',
       'Özüni aýyrdy',
       'Habarlaşyp bolmady',
       'Başga',

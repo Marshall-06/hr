@@ -1,0 +1,739 @@
+/* Excel: ANKETA Kadr Türkmençe.xlsx — A4 bir liste
+   Çap (ähli PC): çep 1.5sm, sag 1sm — gönüden seredilende */
+@page {
+  size: 210mm 297mm;
+  margin: 7mm 1cm 7mm 1.5cm;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: #cfcfcf;
+  font-family: "Times New Roman", Times, "Liberation Serif", serif;
+  color: #000;
+  font-size: 12pt;
+  line-height: 1.2;
+}
+
+.no-print.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: #2f3b46;
+  padding: 10px 16px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.2);
+}
+
+.no-print.toolbar .toolbar-title {
+  color: rgba(255,255,255,.85);
+  font-family: "Segoe UI", sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-right: auto;
+}
+
+.no-print.toolbar button {
+  font-family: "Segoe UI", sans-serif;
+  font-size: 0.88rem;
+  font-weight: 700;
+  border: 0;
+  border-radius: 999px;
+  padding: 9px 16px;
+  cursor: pointer;
+  line-height: 1.2;
+}
+
+.tb-back { background: #fff; color: #2f3b46; }
+.tb-back:hover { background: #eee; }
+.tb-print { background: linear-gradient(180deg, #c8a951, #a6853d); color: #fff; }
+.tb-word {
+  background: rgba(255,255,255,.12);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,.3) !important;
+}
+.tb-close {
+  background: rgba(255,255,255,.12);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,.25) !important;
+}
+
+.sheet {
+  width: 210mm;
+  min-height: 297mm;
+  margin: 12px auto;
+  background: #fff;
+  /* ekran preview = çap: üst/aşak ~7mm, sag 1cm, çep 1.5cm */
+  padding: 7mm 1cm 7mm 1.5cm;
+  box-shadow: 0 2px 10px rgba(0,0,0,.25);
+}
+
+/* style.css global table:hover / padding çaknyşmasyn */
+.sheet table {
+  width: 100%;
+  border-collapse: collapse;
+  border-spacing: 0;
+  background: #fff !important;
+}
+.sheet table tr:hover td,
+.sheet table tr:hover th {
+  background: transparent !important;
+}
+.sheet table tr:last-child td {
+  border-bottom: 1px solid #000;
+}
+
+/* —— Başlyk (Excel r1–r9) —— */
+.x-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 0 2px;
+  min-height: 28px;
+}
+
+.x-agency {
+  text-align: center;
+  font-size: 13pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 0;
+}
+
+.x-anketa-no {
+  text-align: center;
+  font-size: 14pt;
+  font-weight: 800;
+  margin: 6px 0 18px;
+}
+
+/* Logo + wezipe + surat — aşakda */
+.x-top {
+  display: grid;
+  grid-template-columns: 138px 1fr 150px;
+  gap: 10px 12px;
+  align-items: start;
+  margin: 8px 0 10px;
+}
+
+.x-logo {
+  width: 132px;
+  height: 132px;
+  object-fit: contain;
+  margin-top: 2px;
+}
+
+.pos-row {
+  display: grid;
+  grid-template-columns: auto minmax(120px, 48%);
+  gap: 8px 10px;
+  align-items: start;
+  justify-content: start;
+  margin-top: 18px;
+}
+
+.pos-label {
+  font-weight: 700;
+  white-space: nowrap;
+  padding-top: 3px;
+}
+
+/* Wezipe — Excel ýaly: diňe gorizontal çyzyk, bold tekst */
+.pos-table {
+  width: 100%;
+  max-width: 220px;
+  border-collapse: collapse;
+  border: 1.5px solid #000;
+  table-layout: fixed;
+}
+
+.pos-table td {
+  border: none;
+  border-bottom: 1px solid #000;
+  padding: 3px 6px;
+  min-height: 18px;
+  font-size: 12pt;
+  font-weight: 700;
+  text-align: left;
+  vertical-align: middle;
+  line-height: 1.2;
+}
+
+.pos-table tr:last-child td {
+  border-bottom: none;
+}
+
+.x-top-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  justify-self: end;
+  margin-right: 8px;
+  margin-top: -12px;
+}
+
+.x-sene {
+  font-size: 12pt;
+  white-space: nowrap;
+}
+.x-sene b { font-weight: 700; margin-left: 4px; }
+
+.photo {
+  width: 132px;
+  height: 176px;
+  border: 1.5px solid #000;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fafafa;
+}
+.photo img { width: 100%; height: 100%; object-fit: cover; object-position: center top; }
+.photo span { color: #777; font-size: 10pt; }
+
+/* —— Bölüm atlary —— */
+.sec-title {
+  font-weight: 700;
+  margin: 6px 0 2px;
+  font-size: 12pt;
+}
+
+.sec-inline { font-weight: 700; margin-right: 10px; }
+
+/* —— 2) Şahsy (Excel — 2 tablisa + adres) —— */
+.person-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.2cm;
+  align-items: start;
+  margin-bottom: 0;
+}
+
+.person-split + table.person.person-full {
+  margin-top: 0;
+  width: 100%;
+}
+
+table.person {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1.5px solid #000;
+  table-layout: fixed;
+  font-size: 12pt;
+  margin-bottom: 0;
+}
+
+/* Diňe lbl|val bölen çyzygy — sütunlary giňeltmezden baha üçin ýer */
+table.person.person-half col.c-lbl { width: 44%; }
+table.person.person-half col.c-val { width: 56%; }
+
+table.person.person-half td.lbl {
+  white-space: normal;
+  line-height: 1.12;
+  font-size: 10.5pt;
+  padding: 2px 4px;
+}
+
+table.person.person-full col.c-lbl-l { width: 18%; }
+table.person.person-full col.c-val-l { width: 82%; }
+
+table.person td {
+  border: 1px solid #000;
+  padding: 2px 5px;
+  vertical-align: middle;
+  height: 18px;
+}
+
+table.person td.person-gap {
+  display: none;
+}
+table.person td.lbl {
+  font-weight: 700;
+  white-space: nowrap;
+  background: #fff;
+  font-size: 12pt;
+}
+table.person td.val {
+  overflow: hidden;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: normal;
+  hyphens: none;
+  line-height: 1.2;
+  font-size: 11.5pt;
+}
+
+/* Adres — uzyn setir, gysylmaz ýaly */
+table.person tr.addr td {
+  height: auto;
+  min-height: 22px;
+  padding: 4px 6px;
+  vertical-align: top;
+}
+table.person tr.addr td.lbl {
+  white-space: normal;
+  width: 15%;
+  line-height: 1.2;
+}
+table.person tr.addr td.val {
+  overflow: visible;
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.25;
+  font-size: 12pt;
+}
+
+/* —— 3) Bilim (Excel r23–r27) —— */
+.bilim-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 28px;
+  margin: 6px 0 3px;
+  font-size: 12pt;
+}
+.bilim-row > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.bilim-row--excel {
+  gap: 6px 56px;
+  margin: 8px 0 4px;
+}
+.bilim-row--excel .sec-inline {
+  margin-right: 20px;
+}
+.bilim-row--excel > span:not(.sec-inline) {
+  margin-right: 0;
+}
+
+table.grid {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0 0 2px;
+  font-size: 12pt;
+  table-layout: fixed;
+}
+table.grid th,
+table.grid td {
+  border: 1px solid #000;
+  padding: 2px 4px;
+  vertical-align: middle;
+  height: 16px;
+}
+table.grid th {
+  font-weight: 700;
+  text-align: center;
+  background: #fff;
+}
+table.grid .w-years { width: 16%; }
+table.grid .w-spec { width: 24%; }
+table.grid .w-dir { width: 22%; }
+table.grid .w-pos { width: 22%; }
+
+table.edu tbody tr { height: 20px; }
+table.work tbody tr { height: 16px; }
+
+table.edu .w-years { width: 21%; }
+table.edu thead th:nth-child(2),
+table.edu tbody td:nth-child(2) { width: 57%; }
+table.edu .w-spec { width: 22%; }
+
+table.work .w-years { width: 14%; }
+table.work thead th:nth-child(2),
+table.work tbody td:nth-child(2) { width: 36%; }
+table.work .w-dir { width: 25%; }
+table.work .w-pos { width: 25%; }
+
+/* —— 4) Dil + programmalar (Excel — 2 tablisa) —— */
+.skills-split {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.8cm;
+  align-items: stretch;
+  margin: 2px 0 8px;
+  width: 100%;
+}
+
+.skills-split > table.grid {
+  margin: 0 !important;
+  width: 100% !important;
+  border: 1.5px solid #000 !important;
+}
+
+table.langs,
+table.progs {
+  font-size: 11pt !important;
+  line-height: 1.15;
+  table-layout: fixed !important;
+  width: 100% !important;
+}
+
+/* PROGRAMMALAR — 2 aýratyn tablisa, ortada boşluk (Excel surat) */
+.progs-block {
+  width: 100%;
+  font-size: 11pt !important;
+  line-height: 1.15;
+}
+
+.progs-head {
+  text-align: center !important;
+  font-weight: 700 !important;
+  border: 1.5px solid #000 !important;
+  border-bottom: 1px solid #000 !important;
+  padding: 2px 4px !important;
+  font-size: 11pt !important;
+  background: #fff !important;
+}
+
+.progs-split {
+  display: flex !important;
+  gap: 0.5cm;
+  align-items: stretch;
+  width: 100%;
+}
+
+table.progs-half {
+  flex: 1 1 0;
+  width: 0;
+  min-width: 0;
+  margin: 0 !important;
+  border: 1.5px solid #000 !important;
+  border-top: none !important;
+  table-layout: fixed !important;
+  border-collapse: collapse !important;
+}
+
+table.progs-half col.prog-n { width: 84%; }
+table.progs-half col.prog-t { width: 16%; }
+
+table.langs .lang-name,
+table.progs .prog-name {
+  white-space: nowrap;
+  text-align: left !important;
+  padding-left: 5px !important;
+  padding-right: 2px !important;
+}
+
+table.langs th,
+table.langs td,
+table.progs th,
+table.progs td {
+  padding: 2px 3px !important;
+  height: auto !important;
+  min-height: 17px;
+  line-height: 1.15 !important;
+  vertical-align: middle !important;
+}
+
+table.progs-half td.c {
+  width: 22px;
+  text-align: center !important;
+  padding: 0 1px !important;
+  font-weight: 700 !important;
+  font-size: 11pt !important;
+  line-height: 1 !important;
+}
+
+table.langs td.c {
+  width: 11%;
+  text-align: center !important;
+  padding-left: 1px !important;
+  padding-right: 1px !important;
+}
+
+.sheet .progs-block,
+.sheet .progs-head,
+.sheet table.progs-half {
+  background: #fff !important;
+}
+
+.sheet .progs-head {
+  border: 1px solid #000 !important;
+  border-bottom: 1px solid #000 !important;
+  font-weight: 700 !important;
+  text-align: center !important;
+}
+
+.sheet table.progs-half {
+  border: 1px solid #000 !important;
+  border-top: none !important;
+  width: auto !important;
+  min-width: 0 !important;
+  flex: 1 1 0 !important;
+}
+
+.sheet .progs-split {
+  display: flex !important;
+  gap: 0.5cm !important;
+}
+table.skills-combined { display: none; }
+
+/* style.css: table { min-width:760px } — sheet içini bozýar, ýatyr */
+.sheet table,
+.sheet table.grid,
+.sheet table.person,
+.sheet table.pos-table,
+.sheet table.skills-combined,
+.sheet table.langs,
+.sheet table.progs,
+.sheet table.edu,
+.sheet table.work {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  border-collapse: collapse !important;
+  border-spacing: 0 !important;
+  background: #fff !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  table-layout: fixed !important;
+  transform: none !important;
+  zoom: normal !important;
+}
+.sheet table tr:hover td,
+.sheet table tr:hover th {
+  background: transparent !important;
+}
+.sheet table th,
+.sheet table td {
+  border: 1px solid #000 !important;
+  border-bottom: 1px solid #000 !important;
+  padding: 2px 4px !important;
+  font-size: inherit !important;
+  line-height: 1.15 !important;
+  vertical-align: middle !important;
+  text-transform: none !important;
+  letter-spacing: normal !important;
+  background: #fff !important;
+  color: #000 !important;
+  font-weight: inherit;
+}
+.sheet table th {
+  font-weight: 700 !important;
+  text-align: center !important;
+}
+.sheet table tr:last-child td {
+  border-bottom: 1px solid #000 !important;
+}
+.sheet table.person td.lbl,
+.sheet table .lbl {
+  font-weight: 700 !important;
+  text-align: left !important;
+  white-space: nowrap;
+}
+.sheet table.person.person-half td.lbl {
+  white-space: normal !important;
+}
+.sheet table.person td.val,
+.sheet table .val {
+  text-align: left !important;
+  font-weight: 400 !important;
+  overflow: hidden;
+  word-wrap: break-word;
+}
+.sheet table.pos-table {
+  width: 100% !important;
+  max-width: 220px !important;
+  border: 1.5px solid #000 !important;
+}
+.sheet table.pos-table td {
+  border: none !important;
+  border-bottom: 1px solid #000 !important;
+  padding: 3px 6px !important;
+  font-weight: 700 !important;
+  text-align: left !important;
+  font-size: 12pt !important;
+}
+.sheet table.pos-table tr:last-child td {
+  border-bottom: none !important;
+}
+
+.box {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: none;
+  text-align: center;
+  line-height: 14px;
+  font-size: 11pt;
+  font-weight: 700;
+  vertical-align: middle;
+  flex-shrink: 0;
+  background: transparent;
+}
+.bilim-row .box {
+  width: 13px;
+  height: 13px;
+  line-height: 11px;
+  font-size: 10pt;
+  border: 1.3px solid #000;
+  background: #fff;
+}
+table.langs .box,
+table.progs .box,
+table.skills-combined .box,
+table.skills .box {
+  width: 12px;
+  height: 12px;
+  line-height: 12px;
+  font-size: 11pt;
+  border: none;
+  background: transparent;
+}
+
+/* —— 6) Şertler — ýokaryk gysylan, Goly üçin ýer —— */
+.sec-title.sec-terms {
+  margin: 3px 0 1px;
+}
+.row6 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+  margin: 2px 0 0;
+  font-size: 12pt;
+  min-height: 18px;
+}
+.row6 .lbl6 { font-weight: 700; }
+.row6 .u.short {
+  display: inline-block;
+  min-width: 56px;
+  border-bottom: 1px solid #333;
+  padding: 0 4px;
+  text-align: center;
+}
+.row6 .spacer { flex: 1 1 10px; }
+
+/* E-mail + Goly — gol üçin aşakda boşluk */
+.x-foot {
+  margin-top: 18px;
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 12px 20px;
+  font-size: 12pt;
+  padding-top: 4px;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+.x-foot-contact {
+  flex: 1 1 auto;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-bottom: 1px;
+}
+.x-sign {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: flex-end;
+  gap: 6px;
+  white-space: nowrap;
+}
+.x-sign .sign-line {
+  display: inline-block;
+  width: 140px;
+  height: 26px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-bottom: 1px solid #000 !important;
+  vertical-align: bottom;
+  box-sizing: border-box;
+}
+
+.loading { padding: 40px; text-align: center; }
+.err { color: #b00020; padding: 24px; font-family: "Segoe UI", sans-serif; }
+
+@media print {
+  @page {
+    size: 210mm 297mm;
+    margin: 7mm 1cm 7mm 1.5cm;
+  }
+  html, body {
+    background: #fff !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-family: "Times New Roman", Times, "Liberation Serif", serif !important;
+    font-size: 12pt !important;
+    line-height: 1.2 !important;
+    color: #000 !important;
+    zoom: 1 !important;
+    transform: none !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .no-print, .toolbar {
+    display: none !important;
+    visibility: hidden !important;
+  }
+  .sheet, .page {
+    margin: 0 !important;
+    box-shadow: none !important;
+    width: auto !important;
+    max-width: none !important;
+    min-height: auto !important;
+    padding: 0 !important;
+  }
+  .x-foot {
+    margin-top: 16px !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    page-break-before: avoid;
+  }
+  .x-sign .sign-line {
+    height: 26px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-bottom: 1px solid #000 !important;
+  }
+  .sec-title.sec-terms {
+    margin: 2px 0 1px !important;
+  }
+  table.work tbody tr {
+    height: 15px !important;
+  }
+}
+
+/* Diňe ekran — çapda mobil stil ulanylmasyn (PC-ler üýtgemesin) */
+@media screen and (max-width: 720px) {
+  .sheet { width: auto; margin: 8px; padding: 12px; }
+  .x-top { grid-template-columns: 1fr; }
+  .x-logo { width: 110px; height: 110px; }
+  .photo { width: 84px; height: 112px; }
+  .pos-row { grid-template-columns: 1fr; margin-top: 8px; }
+  .skills-split { grid-template-columns: 1fr; }
+  .x-top-side { align-items: flex-start; }
+}
+
+/* Skan JPG — ekranda uly görkeziş (çap sahypalary) */
+body.anketa-scan-mode .sheet.page {
+  max-width: calc(100vw - 24px);
+  width: 100%;
+  margin: 8px auto;
+  padding: 0;
+}
+body.anketa-scan-mode .scan-anketa-wrap {
+  width: 100%;
+  max-width: calc(100vw - 32px);
+}
+body.anketa-scan-mode .scan-anketa-page {
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+}
+body.packet-print.anketa-scan-mode .packet-anketa {
+  max-width: calc(100vw - 24px);
+}

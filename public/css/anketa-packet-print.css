@@ -1,0 +1,63 @@
+/* Anketa + şertnama bir çap (yzygiderli) */
+body.packet-print {
+  background: #cfcfcf;
+  margin: 0;
+}
+
+#packet {
+  display: block;
+}
+
+.packet-anketa {
+  margin-bottom: 24px;
+}
+
+.packet-contract {
+  /* contract-print.css .page stilini ulanýar */
+}
+
+@media print {
+  @page anketa-page {
+    size: 210mm 297mm;
+    margin: 7mm 1cm 7mm 1.5cm;
+  }
+  @page contract-page {
+    size: 210mm 297mm;
+    margin: 18mm 1cm 18mm 1.5cm;
+  }
+
+  html, body.packet-print {
+    background: #fff !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    zoom: 1 !important;
+    transform: none !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .no-print, .toolbar {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  .packet-anketa {
+    page: anketa-page;
+    page-break-after: always;
+    break-after: page;
+    margin: 0 !important;
+    box-shadow: none !important;
+    width: auto !important;
+    min-height: auto !important;
+    padding: 0 !important;
+  }
+
+  .packet-contract {
+    page: contract-page;
+    margin: 0 !important;
+    box-shadow: none !important;
+    width: auto !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+  }
+}

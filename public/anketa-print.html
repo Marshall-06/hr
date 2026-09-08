@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="tk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Anketa çap</title>
+  <link rel="icon" type="image/png" href="/assets/favicon.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="stylesheet" href="/css/print-lock.css?v=1">
+  <link rel="stylesheet" href="/css/anketa-print.css?v=36">
+  <link rel="stylesheet" href="/css/anketa-view.css?v=11">
+</head>
+<body data-no-fit="1" class="print-locked">
+  <div class="no-print toolbar">
+    <span class="toolbar-title">Anketa çap</span>
+    <button type="button" class="tb-back" data-print-back>← Yza</button>
+    <button type="button" class="tb-print" data-print-do>Çap et</button>
+    <button type="button" class="tb-word" data-print-word>Word ýükle</button>
+    <button type="button" class="tb-close" data-print-close>Ýap</button>
+    <p class="print-hint">
+      Ähli PC-de birmeňzeş: <strong>A4</strong>,
+      <strong>Masştab / Scale = 100%</strong> (Fit to page däl!),
+      <strong>Margins = Default</strong>,
+      <strong>Headers and footers / Колонтитулы</strong> öçüriň.
+      Çep 1,5 sm · Sag 1 sm.
+    </p>
+  </div>
+  <div class="sheet page" id="sheet">
+    <p class="loading">Ýüklenýär...</p>
+  </div>
+  <script src="/js/api.js?v=14"></script>
+  <script src="/js/print-nav.js?v=19"></script>
+  <script src="/js/anketa-print.js?v=32"></script>
+  <script src="/js/anketa-scan-view.js?v=7"></script>
+</body>
+</html>

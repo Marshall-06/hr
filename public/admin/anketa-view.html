@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="tk">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Anketa — Kerwen Agenstwa</title>
+  <link rel="icon" type="image/png" href="/assets/favicon.png">
+  <link rel="apple-touch-icon" href="/assets/favicon.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="stylesheet" href="/css/style.css?v=95">
+  <script src="/js/fit-screen.js?v=3" defer></script>
+  <link rel="stylesheet" href="/css/print-lock.css?v=1">
+  <link rel="stylesheet" href="/css/anketa-print.css?v=36">
+  <link rel="stylesheet" href="/css/anketa-view.css?v=13">
+</head>
+
+<body data-brand-page="anketa-view" class="anketa-view-page">
+  <header class="header no-print">
+    <div class="container header-inner">
+      <div class="logo-group">
+        <img src="/assets/logo.png" alt="Kerwen" style="height:40px" data-brand-logo>
+        <div class="logo-text">
+          <h1>Anketa</h1>
+          <p id="anketa-number">-</p>
+        </div>
+      </div>
+      <nav class="nav">
+        <button type="button" class="btn btn-sm btn-primary" id="btn-nav-back">← Yza</button>
+        <button type="button" class="btn btn-sm btn-success" id="btn-assign-offer">Hödürleme</button>
+        <button type="button" class="btn btn-sm btn-accent" id="btn-anketa-toggle-status" hidden>Ýap</button>
+        <a class="btn btn-sm btn-accent" id="btn-edit-anketa" href="#">Üýtget</a>
+        <button class="btn btn-sm btn-accent" type="button" id="btn-edit-photo">Surat</button>
+        <button class="btn btn-sm btn-accent" type="button" id="btn-anketa-mail" hidden>E-poçta ugrat</button>
+        <button class="btn btn-sm btn-accent" type="button" id="btn-match-anketa">Wakansiýa</button>
+        <button class="btn btn-sm btn-ghost" type="button" id="btn-anketa-print">Çap et</button>
+        <button class="btn btn-sm btn-accent" type="button" id="btn-anketa-contract-print">Şertnama</button>
+      </nav>
+    </div>
+  </header>
+  <div id="alert-box" class="container no-print" style="margin-top:10px"></div>
+
+  <button type="button" class="anketa-nav-arrow anketa-nav-prev no-print" id="btn-anketa-prev" title="Indiki dalaşgär"
+    hidden aria-label="Indiki">‹</button>
+  <button type="button" class="anketa-nav-arrow anketa-nav-next no-print" id="btn-anketa-next" title="Öňki dalaşgär"
+    hidden aria-label="Öňki">›</button>
+  <p class="anketa-nav-counter no-print" id="anketa-nav-counter" hidden></p>
+
+  <main class="anketa-view-layout" id="content">
+    <aside class="anketa-view-side no-print" id="anketa-view-extra" hidden>
+      <div class="anketa-view-phone" id="anketa-view-phone"></div>
+      <div id="anketa-related"></div>
+      <div id="anketa-comments"></div>
+    </aside>
+    <div class="sheet page anketa-view-sheet" id="anketa-sheet">
+      <p class="loading">Ýüklenýär...</p>
+    </div>
+  </main>
+
+  <script src="/js/branding.js?v=2"></script>
+  <script src="/js/https-easy.js?v=3"></script>
+  <script src="/js/api.js?v=14"></script>
+  <script src="/js/comments.js?v=2"></script>
+  <script src="/js/anketa-photo.js?v=15"></script>
+  <script src="/js/print-nav.js?v=19"></script>
+  <script src="/js/tk-date.js?v=4"></script>
+  <script src="/js/assignment-left-date.js?v=2"></script>
+  <script src="/js/assignment-company-direction.js?v=4"></script>
+  <script src="/js/assignment-salary-date.js?v=3"></script>
+  <script src="/js/anketa-print.js?v=32"></script>
+  <script src="/js/anketa-scan-view.js?v=6"></script>
+  <script src="/js/anketa-mail.js?v=6"></script>
+  <script src="/js/anketa-view.js?v=56"></script>
+</body>
+
+</html>

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="tk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HTTPS ynam — Kerwen (bir gezek)</title>
+  <link rel="stylesheet" href="/css/style.css?v=109">
+  <script src="/js/fit-screen.js?v=3" defer></script>
+  <style>
+    .trust-page { max-width: 680px; margin: 32px auto; padding: 0 16px 40px; }
+    .trust-page h1 { font-size: 1.35rem; margin: 0 0 8px; }
+    .trust-page ol { line-height: 1.75; padding-left: 1.25em; margin: 8px 0; }
+    .trust-page .card {
+      background: #fff; border: 1px solid #d7e0e8; border-radius: 12px;
+      padding: 18px 20px; margin: 14px 0;
+    }
+    .trust-page .hint { color: #64748b; font-size: 0.92rem; margin: 6px 0 0; }
+    .trust-page .warn { color: #b45309; font-size: 0.92rem; margin: 8px 0; }
+    .trust-page .ok { color: #047857; font-weight: 600; }
+    .trust-page code.url { word-break: break-all; font-size: 1.05rem; }
+    .trust-page .btn { display: inline-block; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <div class="trust-page">
+    <h1>Sertifikat + LAN IP (bir gezek)</h1>
+    <p class="hint">
+      Geçenki ýaly: bu sahypadan Root CA göçüriň → Windows-a goýuň → soň
+      <strong>şol bir LAN IP :8443</strong> bilen giriň. Webcam işleýär, Advanced bolmaz.
+    </p>
+    <p class="warn">
+      «Дополнительно → Перейти» / Advanced → Proceed = ynam däl (2 günden gaýdýar).
+      Diňe aşakdaky gurnama hemişelik.
+    </p>
+
+    <div class="card">
+      <h2 style="margin:0 0 8px;font-size:1.05rem">Siziň LAN IP (şu PC-den)</h2>
+      <p>Gurnamadan soň hemişe şu salgy:</p>
+      <p><a id="https-link" href="#"><strong class="url" id="https-text">https://LAN_IP:8443/admin/login.html</strong></a></p>
+      <p class="hint" id="http-hint">Ilki bu sahypany <strong>HTTP 8000</strong> bilen açyň (Advanced ýok).</p>
+      <p class="ok" id="lan-note"></p>
+    </div>
+
+    <div class="card">
+      <h2 style="margin:0 0 8px;font-size:1.05rem">1) Sertifikat göçür</h2>
+      <a class="btn btn-accent" href="/kerwen-https.cer" download="kerwen-https.cer">kerwen-https.cer göçür</a>
+      <p class="hint">Bu Root CA. Her operator PC-de bir gezek. Main PC IP üýtgese-de CA şol bir — yene gurnamak gerek däl.</p>
+    </div>
+
+    <div class="card">
+      <h2 style="margin:0 0 8px;font-size:1.05rem">2) Windows-a goý (rusça)</h2>
+      <ol>
+        <li><code>kerwen-https.cer</code> faýla iki gezek basyň</li>
+        <li><strong>Установить сертификат…</strong></li>
+        <li><strong>Локальный компьютер</strong> (ýok bolsa: Текущий пользователь) → Далее</li>
+        <li><strong>Поместить все сертификаты в следующее хранилище</strong></li>
+        <li>Обзор → <strong>Доверенные корневые центры сертификации</strong> → ОК → Далее → Готово</li>
+        <li>Предупреждение çyksa → <strong>Да</strong></li>
+      </ol>
+      <p class="hint">«Импорт успешно выполнен» görünmeli. LocalMachine (Локальный компьютер) has durnukly.</p>
+    </div>
+
+    <div class="card">
+      <h2 style="margin:0 0 8px;font-size:1.05rem">3) Brauzer + webcam</h2>
+      <ol>
+        <li>Chrome / Edge-i <strong>doly ýapyň</strong> (tray-den hem Выход)</li>
+        <li>Ýokardaky <strong>https://LAN_IP:8443</strong> salgyny açyň</li>
+        <li>Advanced bolmaly däl → giriň → Kameradan al işleýär</li>
+      </ol>
+      <p class="hint">Ähli operatorlar şol bir LAN IP ulanmaly (Main-däki hemişelik IP).</p>
+    </div>
+
+    <p><a href="/admin/login.html">← Giriş sahypasy</a></p>
+  </div>
+  <script>
+    (function () {
+      var host = location.hostname || 'LAN_IP';
+      var httpsUrl = 'https://' + host + ':8443/admin/login.html';
+      var httpTrust = 'http://' + host + ':8000/admin/trust-https.html';
+      var a = document.getElementById('https-link');
+      var t = document.getElementById('https-text');
+      var note = document.getElementById('lan-note');
+      var hint = document.getElementById('http-hint');
+      if (a) a.href = httpsUrl;
+      if (t) t.textContent = httpsUrl;
+      if (note) {
+        note.textContent = location.protocol === 'https:'
+          ? 'Siz eýýäm HTTPS-desiňiz. Sertifikat gurnalmadyk bolsa ilki HTTP trust sahypasyna geçiň.'
+          : 'Häzir HTTP — dogry. Sertifikat goýuň, soň HTTPS 8443.';
+      }
+      if (hint && location.protocol === 'https:') {
+        hint.innerHTML = 'Gurnama üçin açyň: <a href="' + httpTrust + '"><code>' + httpTrust + '</code></a>';
+      }
+    })();
+  </script>
+</body>
+</html>

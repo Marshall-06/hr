@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="tk">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Panel — Kerwen Agenstwa</title>
+  <link rel="icon" type="image/png" href="/assets/favicon.png">
+  <link rel="apple-touch-icon" href="/assets/favicon.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="/css/style.css?v=124">
+  <script src="/js/fit-screen.js?v=3" defer></script>
+</head>
+
+<body class="admin-body" data-brand-page="panel">
+  <header class="header admin-header">
+    <div class="container header-inner">
+      <div class="logo-group">
+        <button type="button" class="sidebar-toggle" id="btn-sidebar-toggle" data-i18n-title="menu"
+          data-i18n-aria="menu" title="Menýu" aria-label="Menýu">
+          <span></span><span></span><span></span>
+        </button>
+        <img src="/assets/logo.png" alt="Kerwen" style="height:40px" data-brand-logo>
+        <div class="logo-text">
+          <h1 data-brand="full">Kerwen Agenstwa</h1>
+          <p id="role-badge">-</p>
+        </div>
+      </div>
+      <nav class="nav">
+        <div class="lang-switch" role="group" aria-label="Language">
+          <button type="button" class="lang-btn active" data-lang="tk">TK</button>
+          <button type="button" class="lang-btn" data-lang="ru">RU</button>
+        </div>
+        <span id="user-info" class="user-chip"></span>
+        <button class="btn btn-sm btn-danger" onclick="logout()" data-i18n="logout">Çykmak</button>
+      </nav>
+    </div>
+  </header>
+
+  <div class="admin-layout" id="admin-layout">
+    <aside class="sidebar" id="sidebar">
+      <a href="/admin/dashboard.html?tab=dashboard" class="active" data-tab="dashboard"
+        onclick="event.preventDefault(); switchTab('dashboard', this)"><span
+          data-i18n="nav_dashboard">Dolandyryş</span><small data-i18n="nav_dashboard_sub">Statistika</small></a>
+      <a href="/admin/dashboard.html?tab=anketas" data-tab="anketas"
+        onclick="event.preventDefault(); switchTab('anketas', this)"><span
+          data-i18n="nav_anketas">Anketalar</span><small data-i18n="nav_anketas_sub">Işleýän / işlemeýän</small></a>
+      <a href="/admin/dashboard.html?tab=vacancies" data-tab="vacancies"
+        onclick="event.preventDefault(); switchTab('vacancies', this)"><span
+          data-i18n="nav_vacancies">Wakansiýalar</span><small data-i18n="nav_vacancies_sub">Firma işleri</small></a>
+      <a href="/admin/dashboard.html?tab=assigned" data-tab="assigned"
+        onclick="event.preventDefault(); switchTab('assigned', this)"><span
+          data-i18n="nav_assigned">Hödürlenenler</span><small data-i18n="nav_assigned_sub">Ugradylanlar</small></a>
+      <a href="/admin/dashboard.html?tab=fees" data-tab="fees" class="admin-only hidden"
+        onclick="event.preventDefault(); switchTab('fees', this)"><span data-i18n="nav_fees">Tölegler</span><small
+          data-i18n="nav_fees_sub">50% girdeji</small></a>
+      <a href="/admin/dashboard.html?tab=reports" data-tab="reports" class="admin-only hidden"
+        onclick="event.preventDefault(); switchTab('reports', this)"><span
+          data-i18n="nav_reports">Hasabatlar</span><small data-i18n="nav_reports_sub">Sanawlar</small></a>
+      <a href="/admin/dashboard.html?tab=excel" data-tab="excel" class="admin-only hidden"
+        onclick="event.preventDefault(); switchTab('excel', this)"><span data-i18n="nav_excel">Excel</span><small
+          data-i18n="nav_excel_sub">Import / export</small></a>
+      <a href="/admin/dashboard.html?tab=users" data-tab="users" class="admin-only hidden"
+        onclick="event.preventDefault(); switchTab('users', this)"><span data-i18n="nav_users">Ulanyjylar</span><small
+          data-i18n="nav_users_sub">Admin</small></a>
+      <a href="/admin/dashboard.html?tab=settings" data-tab="settings" class="admin-only hidden"
+        onclick="event.preventDefault(); switchTab('settings', this)"><span
+          data-i18n="nav_settings">Sazlamalar</span><small data-i18n="nav_settings_sub">Poçta</small></a>
+    </aside>
+
+    <main class="admin-content">
+      <div id="alert-box"></div>
+
+      <section id="tab-dashboard">
+        <h2 class="section-title" data-i18n="dash_title">Statistika</h2>
+        <div class="cards" style="padding-top:0">
+          <div class="card">
+            <h3 data-i18n="dash_total_anketa">Jemi anketalar</h3>
+            <p class="stat" id="d-total-anketa">-</p>
+          </div>
+          <div class="card">
+            <h3 data-i18n="dash_placed_by_us">Biziň ýerleşdirenlerimiz</h3>
+            <p class="stat" id="d-placed-by-us">-</p>
+          </div>
+          <div class="card">
+            <h3 data-i18n="dash_self_employed">Özi işe ýerleşenler</h3>
+            <p class="stat" id="d-self-placed">-</p>
+          </div>
+          <div class="card">
+            <h3 data-i18n="dash_seeking">Iş gözleýän</h3>
+            <p class="stat" id="d-islanok">-</p>
+          </div>
+          <div class="card">
+            <h3 data-i18n="dash_open_vac">Açyk wakansiýa</h3>
+            <p class="stat" id="d-acyk-vac">-</p>
+          </div>
+        </div>
+        <h3 class="section-title" style="font-size:1.05rem;margin-top:8px" data-i18n="dash_quick">Çalt iş</h3>
+        <div class="quick-actions">
+          <button type="button" class="btn btn-accent"
+            onclick="switchTab('anketas', document.querySelector('[data-tab=anketas]'))"
+            data-i18n="nav_anketas">Anketalar</button>
+          <button type="button" class="btn btn-primary"
+            onclick="switchTab('vacancies', document.querySelector('[data-tab=vacancies]'))"
+            data-i18n="nav_vacancies">Wakansiýalar</button>
+          <button type="button" class="btn btn-ghost"
+            onclick="switchTab('assigned', document.querySelector('[data-tab=assigned]'))"
+            data-i18n="nav_assigned">Hödürlenenler</button>
+        </div>
+      </section>
+
+      <section id="tab-anketas" class="hidden">
+        <div class="toolbar filter-toolbar">
+          <div class="filter-fields">
+            <input type="text" id="anketa-filter-number" data-i18n-placeholder="ph_no" placeholder="№"
+              style="max-width:90px" onchange="loadAnketas()">
+            <input type="date" class="tk-date" id="anketa-filter-date-from" data-i18n-title="title_date_from"
+              data-i18n-placeholder="ph_date_from" title="Sene (başy)" placeholder="Başy sene" onchange="loadAnketas()">
+            <input type="date" class="tk-date" id="anketa-filter-date-to" data-i18n-title="title_date_to"
+              data-i18n-placeholder="ph_date_to" title="Sene (soňy)" placeholder="Soňky sene" onchange="loadAnketas()">
+            <input type="text" id="anketa-filter-faa" data-i18n-placeholder="ph_faa_short" placeholder="F.A.A"
+              onchange="loadAnketas()">
+            <input type="text" id="anketa-filter-position" data-i18n-placeholder="ph_position" placeholder="Wezipe"
+              onchange="loadAnketas()">
+            <input type="text" id="anketa-filter-phone" data-i18n-placeholder="ph_phone" placeholder="Telefon"
+              onchange="loadAnketas()">
+            <select id="anketa-status" data-option-list="anketa_statuses"
+              data-option-title="Anketa ýagdaýy (Işleýär / Işlemeýär)" data-option-empty
+              data-option-empty-label="Ähli ýagdaý" data-option-empty-value="all" onchange="loadAnketas()">
+              <option value="Islanok" selected data-i18n="st_not_working">Işlemeýär</option>
+              <option value="Isleyar" data-i18n="st_working">Işleýär</option>
+              <option value="all" data-i18n="all_status">Ähli ýagdaý</option>
+            </select>
+            <select id="anketa-gender" data-option-list="person_gender" data-option-title="Jyns (anketa)"
+              data-option-empty data-option-empty-label="Ähli jyns" onchange="loadAnketas()">
+              <option value="" data-i18n="all_gender">Ähli jyns</option>
+              <option value="Erkek" data-i18n="gender_male">Erkek</option>
+              <option value="Ayal" data-i18n="gender_female">Aýal</option>
+            </select>
+            <select id="anketa-filter-car" onchange="loadAnketas()" title="Şahsy awtoulag">
+              <option value="" data-i18n="all_car">Ähli awto</option>
+              <option value="yok" data-i18n="car_no">Ýok</option>
+              <option value="bar" data-i18n="car_yes">Bar</option>
+            </select>
+            <input type="text" id="anketa-search" data-i18n-placeholder="ph_anketa_search"
+              placeholder="Umumy gözleg (dil, programma, bilim...)" style="min-width:160px;max-width:240px">
+          </div>
+          <div class="filter-actions">
+            <button class="btn btn-primary btn-sm" onclick="loadAnketas()" data-i18n="btn_search">Gözle</button>
+            <button class="btn btn-ghost btn-sm" type="button" onclick="resetAnketaFilters()"
+              data-i18n="btn_clear">Arassala</button>
+            <button class="btn btn-accent btn-sm" type="button" id="btn-toggle-anketa-form"
+              onclick="openNewAnketaPage()" data-i18n="btn_new_anketa">+ Täze anketa</button>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="smart-table anketa-list-table" id="anketa-table" data-smart-table="anketas">
+            <colgroup>
+              <col class="an-col-no">
+              <col class="an-col-date">
+              <col class="an-col-faa">
+              <col class="an-col-pos">
+              <col class="an-col-phone">
+              <col class="an-col-status">
+              <col class="an-col-opened">
+              <col class="an-col-actions">
+            </colgroup>
+            <thead>
+              <tr>
+                <th class="sortable" data-sort="anketaNumber" data-i18n="th_no">№</th>
+                <th class="sortable" data-sort="formDate" data-i18n="th_date">Sene</th>
+                <th class="sortable" data-sort="faa" data-i18n="th_faa">F.A.A</th>
+                <th class="sortable" data-sort="desiredPosition" data-i18n="th_position">Wezipe</th>
+                <th class="sortable" data-sort="phone" data-i18n="th_phone">Telefon</th>
+                <th class="sortable" data-sort="status" data-i18n="th_status">Ýagdaý</th>
+                <th class="sortable" data-sort="statusChangedAt" data-i18n="th_opened_closed">Acylan/Yapylan wagty</th>
+                <th data-i18n="th_actions" class="col-actions">Hereket</th>
+              </tr>
+            </thead>
+            <tbody id="anketa-tbody"></tbody>
+          </table>
+        </div>
+        <div class="list-pager" id="anketa-pager"></div>
+      </section>
+
+      <section id="tab-vacancies" class="hidden">
+        <div class="toolbar filter-toolbar filter-toolbar--vacancies">
+          <div class="filter-fields filter-fields--vacancies">
+            <input type="text" id="vacancy-filter-number" data-i18n-placeholder="ph_no" placeholder="№"
+              style="max-width:72px" onchange="loadAdminVacancies()">
+            <input type="text" id="vacancy-filter-company" data-i18n-placeholder="ph_company" placeholder="Kärhana"
+              onchange="loadAdminVacancies()">
+            <input type="text" id="vacancy-filter-position" data-i18n-placeholder="ph_position" placeholder="Wezipe"
+              onchange="loadAdminVacancies()">
+            <input type="text" id="vacancy-filter-salary" data-i18n-placeholder="ph_salary_short" placeholder="Haky"
+              style="max-width:90px" onchange="loadAdminVacancies()">
+            <select id="vacancy-status" onchange="loadAdminVacancies()">
+              <option value="Acyk" selected data-i18n="vac_open_short">Açyk</option>
+              <option value="Yapyk" data-i18n="vac_closed_short">Ýapyk</option>
+              <option value="" data-i18n="all_status">Ähli ýagdaý</option>
+            </select>
+            <select id="vacancy-filter-operator" onchange="loadAdminVacancies()" title="Forum operator"
+              data-i18n-title="th_forum_op">
+              <option value="" data-i18n="all_operators">Ähli operatorlar</option>
+            </select>
+            <select id="vacancy-filter-marital" data-option-list="marital_status" data-option-title="Maşgala ýagdaýy"
+              data-option-empty data-option-empty-label="Maşgala" onchange="loadAdminVacancies()"
+              title="Maşgala ýagdaýy">
+              <option value="" data-i18n="all_marital">Maşgala</option>
+              <option value="Maşgalaly">Maşgalaly</option>
+              <option value="Sallah">Sallah</option>
+              <option value="Aýrylyşan">Aýrylyşan</option>
+              <option value="Durmuşa çykmadyk">Durmuşa çykmadyk</option>
+              <option value="Soralanmaýar">Soralanmaýar</option>
+            </select>
+            <select id="vacancy-filter-car" onchange="loadAdminVacancies()" title="Şahsy awtoulag">
+              <option value="" data-i18n="all_car">Ähli awto</option>
+              <option value="yok" data-i18n="car_no">Ýok</option>
+              <option value="bar" data-i18n="car_yes">Bar</option>
+            </select>
+          </div>
+          <div class="filter-actions">
+            <button class="btn btn-primary btn-sm" onclick="loadAdminVacancies()" data-i18n="btn_search">Gözle</button>
+            <button class="btn btn-ghost btn-sm" type="button" onclick="resetVacancyFilters()"
+              data-i18n="btn_clear">Arassala</button>
+            <button class="btn btn-accent btn-sm" type="button" id="btn-toggle-vacancy-form"
+              onclick="openNewVacancyPage()" data-i18n="btn_new_vacancy">+ Täze wakansiýa</button>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="smart-table vacancy-list-table" id="vacancy-table" data-smart-table="vacancies">
+            <colgroup>
+              <col class="vac-col-no">
+              <col class="vac-col-date">
+              <col class="vac-col-company">
+              <col class="vac-col-pos">
+              <col class="vac-col-salary">
+              <col class="vac-col-status">
+              <col class="vac-col-assign">
+              <col class="vac-col-operator">
+              <col class="vac-col-contact">
+              <col class="vac-col-actions">
+            </colgroup>
+            <thead>
+              <tr>
+                <th class="sortable" data-sort="vacancyNumber" data-i18n="th_no">№</th>
+                <th class="sortable" data-sort="vacancyDate" data-i18n="th_date">Sene</th>
+                <th class="sortable" data-sort="companyName" data-i18n="th_company">Kärhana</th>
+                <th class="sortable" data-sort="position" data-i18n="th_position">Wezipe</th>
+                <th class="sortable" data-sort="salary" data-i18n="th_salary_short" title="Aýlyk haky">Haky</th>
+                <th class="sortable" data-sort="status" data-i18n="th_status">Ýagdaý</th>
+                <th class="sortable" data-sort="assigned" data-i18n="th_assigned">Hödürlenen</th>
+                <th class="sortable" data-sort="forumOperator" data-i18n="th_forum_op">Forum operator</th>
+                <th class="sortable" data-sort="contactName" data-i18n="th_contact_firm">Jogapkär (firma wekili)</th>
+                <th data-i18n="th_actions" class="col-actions">Hereket</th>
+              </tr>
+            </thead>
+            <tbody id="vacancy-tbody"></tbody>
+          </table>
+        </div>
+        <div class="list-pager" id="vacancy-pager"></div>
+      </section>
+
+      <section id="tab-match" class="hidden">
+        <div class="toolbar match-toolbar">
+          <select id="match-vacancy" style="min-width:280px;flex:1"></select>
+          <div class="match-status-switch" id="match-anketa-status-switch" role="group" aria-label="Anketa ýagdaýy">
+            <button type="button" class="match-status-opt is-active" id="btn-match-status-idle"
+              onclick="setMatchStatusFilter(false)" data-i18n="match_status_idle"
+              title="Diňe işlemeýän (iş gözleýän) anketalar">
+              Işlemeýänler
+            </button>
+            <button type="button" class="match-status-opt" id="btn-match-status-all"
+              onclick="setMatchStatusFilter(true)" data-i18n="match_status_all"
+              title="Işleýär + işlemeýär — ähli ýagdaý">
+              Ählisi
+            </button>
+          </div>
+          <div class="match-status-switch hidden" id="match-vacancy-status-switch" role="group" aria-label="Wakansiýa ýagdaýy">
+            <button type="button" class="match-status-opt is-active" id="btn-match-vac-open"
+              onclick="setMatchVacancyFilter(false)" data-i18n="match_vac_open"
+              title="Diňe açyk wakansiýalar">
+              Açyk
+            </button>
+            <button type="button" class="match-status-opt" id="btn-match-vac-all"
+              onclick="setMatchVacancyFilter(true)" data-i18n="match_vac_all"
+              title="Açyk + ýapyk — ähli wakansiýalar">
+              Ählisi
+            </button>
+          </div>
+          <button class="btn btn-ghost btn-sm" type="button" onclick="runMatch()"
+            data-i18n="match_refresh">Täzele</button>
+          <button type="button" class="btn btn-ghost btn-sm admin-only hidden" id="btn-match-edit-statuses"
+            onclick="OptionLists && OptionLists.open('assignment_statuses','Hödürleme ýagdaýlary')"
+            data-i18n="btn_edit_list">Düzediş</button>
+          <button class="btn btn-accent btn-sm" type="button"
+            onclick="switchTab('assigned', document.querySelector('[data-tab=assigned]'))"
+            data-i18n="match_assigned_go">Hödürlenenler →</button>
+        </div>
+        <div id="match-vacancy-card" class="vacancy-call-card hidden"></div>
+        <div id="match-results" class="match-results-panel"></div>
+      </section>
+
+      <section id="tab-assigned" class="hidden">
+        <div class="report-period-bar" style="margin-bottom:12px">
+          <div class="report-period-group">
+            <span class="report-period-label" data-i18n="rpt_period">Döwür</span>
+            <div class="report-period-btns" role="group" data-i18n-aria="rpt_period">
+              <button type="button" class="btn btn-sm btn-ghost assigned-period-btn" data-period="day"
+                onclick="setAssignedPeriod('day')" data-i18n="rpt_day">Gün</button>
+              <button type="button" class="btn btn-sm btn-ghost assigned-period-btn" data-period="week"
+                onclick="setAssignedPeriod('week')" data-i18n="rpt_week">Hepde</button>
+              <button type="button" class="btn btn-sm btn-accent assigned-period-btn" data-period="month"
+                onclick="setAssignedPeriod('month')" data-i18n="rpt_month">Aý</button>
+              <button type="button" class="btn btn-sm btn-ghost assigned-period-btn" data-period="year"
+                onclick="setAssignedPeriod('year')" data-i18n="rpt_year">Ýyl</button>
+            </div>
+          </div>
+          <div class="report-period-group report-period-group-nav">
+            <span class="report-period-label" data-i18n="rpt_date">Sene</span>
+            <div class="report-nav" role="group" data-i18n-aria="rpt_date">
+              <button type="button" class="btn btn-sm btn-ghost report-nav-arrow" onclick="shiftAssignedPeriod(-1)"
+                data-i18n-title="rpt_prev" title="Öňki" aria-label="Öňki">‹</button>
+              <div class="report-anchor-wrap" id="assigned-anchor-wrap">
+                <input type="month" class="report-date-input" id="assigned-date" onchange="onAssignedDateChange()">
+              </div>
+              <button type="button" class="btn btn-sm btn-ghost report-nav-arrow" onclick="shiftAssignedPeriod(1)"
+                data-i18n-title="rpt_next" title="Indiki" aria-label="Indiki">›</button>
+              <button type="button" class="btn btn-sm btn-ghost" onclick="goAssignedToday()" data-i18n="rpt_today">Şu
+                gün</button>
+            </div>
+          </div>
+        </div>
+        <div class="toolbar filter-toolbar">
+          <div class="filter-fields">
+            <input type="text" id="assigned-filter-number" data-i18n-placeholder="ph_anketa_no" placeholder="Anketa №"
+              style="max-width:100px" onchange="loadAssigned()">
+            <input type="text" id="assigned-filter-faa" data-i18n-placeholder="ph_faa" placeholder="Dalaşgär / F.A.A"
+              onchange="loadAssigned()">
+            <input type="text" id="assigned-filter-phone" data-i18n-placeholder="ph_phone" placeholder="Telefon"
+              onchange="loadAssigned()">
+            <input type="text" id="assigned-filter-company" data-i18n-placeholder="ph_company" placeholder="Firma"
+              onchange="loadAssigned()">
+            <input type="text" id="assigned-filter-position" data-i18n-placeholder="ph_position" placeholder="Wezipe"
+              onchange="loadAssigned()">
+            <input type="text" id="assigned-filter-salary" data-i18n-placeholder="ph_salary" placeholder="Aýlyk"
+              style="max-width:110px" onchange="loadAssigned()">
+            <input type="text" id="assigned-filter-vacancy-number" data-i18n-placeholder="ph_vacancy_no"
+              placeholder="Wak. №" style="max-width:90px" onchange="loadAssigned()">
+            <select id="assigned-status" data-option-list="assignment_statuses" data-option-title="Hödürleme ýagdaýlary"
+              data-option-empty data-option-empty-label="Ähli ýagdaý" onchange="loadAssigned()">
+              <option value="" data-i18n="all_status">Ähli ýagdaý</option>
+              <option value="Hödürlendi" data-i18n="st_hodurlendi">Hödürlendi</option>
+              <option value="Ugradyldy" data-i18n="st_ugradyldy">Ugradyldy</option>
+              <option value="Barjak diýdi" data-i18n="st_barjak">Barjak diýdi</option>
+              <option value="Kabul edildi" data-i18n="st_kabul">Kabul edildi</option>
+              <option value="Olar atkaz etdiler" data-i18n="st_atkaz">Olar atkaz etdiler</option>
+              <option value="Kabul edilmedi" data-i18n="st_kabul_edilmedi">Kabul edilmedi</option>
+            </select>
+            <select id="assigned-vacancy-status" onchange="loadAssigned()">
+              <option value="" data-i18n="all_vacancy">Ähli wakansiýa</option>
+              <option value="Acyk" data-i18n="vac_open">Açyk wakansiýa</option>
+              <option value="Yapyk" data-i18n="vac_closed">Ýapyk wakansiýa</option>
+            </select>
+            <input type="text" id="assigned-search" data-i18n-placeholder="ph_search" placeholder="Umumy gözleg..."
+              style="min-width:150px;max-width:220px">
+          </div>
+          <div class="filter-actions">
+            <button class="btn btn-primary btn-sm" onclick="loadAssigned()" data-i18n="btn_search">Gözle</button>
+            <button class="btn btn-ghost btn-sm" type="button" onclick="resetAssignedFilters()"
+              data-i18n="btn_clear">Arassala</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="assigned-list-table" id="assigned-table">
+            <colgroup>
+              <col class="asg-col-no">
+              <col class="asg-col-name">
+              <col class="asg-col-phone">
+              <col class="asg-col-company">
+              <col class="asg-col-pos">
+              <col class="asg-col-salary">
+              <col class="asg-col-vac">
+              <col class="asg-col-date">
+              <col class="asg-col-status">
+              <col class="asg-col-active">
+              <col class="asg-col-actions vac-col-actions">
+            </colgroup>
+            <thead>
+              <tr>
+                <th data-i18n="th_anketa">Anketa №</th>
+                <th data-i18n="th_candidate">Dalaşgär</th>
+                <th data-i18n="th_phone">Telefon</th>
+                <th data-i18n="th_company">Kärhana</th>
+                <th data-i18n="th_position">Wezipe</th>
+                <th data-i18n="th_salary_short" title="Aýlyk haky">Haky</th>
+                <th data-i18n="th_vac_no">Wak. №</th>
+                <th data-i18n="th_assigned_at" title="Hödürlenen wagty">Sene</th>
+                <th data-i18n="th_status">Ýagdaý</th>
+                <th data-i18n="th_active_assign_short" title="Aktiv hödürleniş">Aktiv</th>
+                <th data-i18n="th_actions" class="col-actions">Hereket</th>
+              </tr>
+            </thead>
+            <tbody id="assigned-tbody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="tab-fees" class="hidden fees-page">
+        <p class="muted fees-hint" data-i18n="fees_hint">
+          Töleg diňe biziň ýerleşdirenlerimiz üçin. Işleýär/Işden çykdy = 50% ÷ 30 × işlen gün (seçilen döwürde).
+        </p>
+        <div class="report-period-bar" style="margin-bottom:12px">
+          <div class="report-period-group">
+            <span class="report-period-label" data-i18n="rpt_period">Döwür</span>
+            <div class="report-period-btns" role="group" data-i18n-aria="rpt_period">
+              <button type="button" class="btn btn-sm btn-ghost fees-period-btn" data-period="day"
+                onclick="setFeesPeriod('day')" data-i18n="rpt_day">Gün</button>
+              <button type="button" class="btn btn-sm btn-ghost fees-period-btn" data-period="week"
+                onclick="setFeesPeriod('week')" data-i18n="rpt_week">Hepde</button>
+              <button type="button" class="btn btn-sm btn-accent fees-period-btn" data-period="month"
+                onclick="setFeesPeriod('month')" data-i18n="rpt_month">Aý</button>
+              <button type="button" class="btn btn-sm btn-ghost fees-period-btn" data-period="year"
+                onclick="setFeesPeriod('year')" data-i18n="rpt_year">Ýyl</button>
+            </div>
+          </div>
+          <div class="report-period-group report-period-group-nav">
+            <span class="report-period-label" data-i18n="rpt_date">Sene</span>
+            <div class="report-nav" role="group" data-i18n-aria="rpt_date">
+              <button type="button" class="btn btn-sm btn-ghost report-nav-arrow" onclick="shiftFeesPeriod(-1)"
+                data-i18n-title="rpt_prev" title="Öňki" aria-label="Öňki">‹</button>
+              <div class="report-anchor-wrap" id="fees-anchor-wrap">
+                <!-- Default döwür = aý; value JS doldurýar (soňky maglumatly aý) -->
+                <input type="month" class="report-date-input" id="fees-date" onchange="onFeesDateChange()">
+              </div>
+              <button type="button" class="btn btn-sm btn-ghost report-nav-arrow" onclick="shiftFeesPeriod(1)"
+                data-i18n-title="rpt_next" title="Indiki" aria-label="Indiki">›</button>
+              <button type="button" class="btn btn-sm btn-ghost" onclick="goFeesToday()" data-i18n="rpt_today">Şu
+                gün</button>
+            </div>
+          </div>
+        </div>
+        <div class="cards fees-summary-cards" id="fees-summary-cards">
+          <div class="card">
+            <h3 data-i18n="fees_due">Almaly</h3>
+            <p class="stat" id="fees-sum-due">—</p>
+          </div>
+          <div class="card">
+            <h3 data-i18n="fees_received">Alnan</h3>
+            <p class="stat" id="fees-sum-paid">—</p>
+          </div>
+          <div class="card">
+            <h3 data-i18n="fees_remaining">Galdy</h3>
+            <p class="stat" id="fees-sum-remaining">—</p>
+          </div>
+        </div>
+        <div class="toolbar filter-toolbar">
+          <div class="filter-fields">
+            <input type="text" id="fees-filter-number" data-i18n-placeholder="ph_anketa_no" placeholder="Anketa №"
+              style="max-width:110px">
+            <input type="text" id="fees-search" data-i18n-placeholder="ph_search" placeholder="F.A.A / telefon..."
+              style="min-width:160px;max-width:240px">
+            <select id="fees-pay-status" onchange="loadFeePayments()">
+              <option value="all" data-i18n="all_status">Ähli ýagdaý</option>
+              <option value="open" data-i18n="fees_st_open">Tölenmedi</option>
+              <option value="partial" data-i18n="fees_st_partial">Bölek tölenen</option>
+              <option value="paid" data-i18n="fees_st_paid">Doly tölenen</option>
+              <option value="no_salary" data-i18n="fees_st_no_salary">Aýlyk ýok</option>
+            </select>
+            <select id="fees-work-status" onchange="loadFeePayments()" title="Işleýär / çykdy">
+              <option value="all" data-i18n="fees_work_all">Ähli (işleýär + çykdy)</option>
+              <option value="working" data-i18n="fees_working">Işleýär</option>
+              <option value="left" data-i18n="fees_left">Çykdy</option>
+            </select>
+            <select id="fees-filter-operator" onchange="loadFeePayments()" title="Işgär (operator)">
+              <option value="" data-i18n="all_operators">Ähli operatorlar</option>
+            </select>
+          </div>
+          <div class="filter-actions">
+            <button class="btn btn-primary btn-sm" onclick="loadFeePayments()" data-i18n="btn_search">Gözle</button>
+            <button class="btn btn-accent btn-sm" type="button" onclick="exportFeesExcelFromTable()">Excel</button>
+            <button class="btn btn-ghost btn-sm" type="button" onclick="resetFeeFilters()"
+              data-i18n="btn_clear">Arassala</button>
+          </div>
+        </div>
+        <div class="table-wrap fees-table-wrap">
+          <table class="smart-table fees-table fees-list-table" id="fees-table" data-smart-table="fees">
+            <colgroup>
+              <col class="fe-col-start">
+              <col class="fe-col-status">
+              <col class="fe-col-left">
+              <col class="fe-col-name">
+              <col class="fe-col-company">
+              <col class="fe-col-position">
+              <col class="fe-col-money">
+              <col class="fe-col-money">
+              <col class="fe-col-money">
+              <col class="fe-col-remain">
+              <col class="fe-col-salary-date">
+              <col class="fe-col-worker">
+              <col class="fe-col-action">
+            </colgroup>
+            <thead>
+              <tr>
+                <th class="sortable fe-col-start" data-sort="workStartDate" data-i18n="th_work_start">Işe başlan</th>
+                <th class="sortable fe-col-status" data-sort="workStatus" data-i18n="th_status">Ýagdaý</th>
+                <th class="sortable fe-col-left" data-sort="leftDate" data-i18n="th_left_date">Işden çykan</th>
+                <th class="sortable fe-col-name" data-sort="name" data-i18n="th_candidate">Dalaşgär</th>
+                <th class="sortable fe-col-company" data-sort="companyName" data-i18n="th_company">Kärhana</th>
+                <th class="sortable fe-col-position" data-sort="position" data-i18n="th_position">Wezipe</th>
+                <th class="sortable fe-col-money" data-sort="salary" data-i18n="th_salary">Aýlyk</th>
+                <th class="sortable fe-col-money" data-sort="expectedFee" data-i18n="fees_due">Almaly</th>
+                <th class="sortable fe-col-money" data-sort="paid" data-i18n="fees_received">Alnan pul</th>
+                <th class="sortable fe-col-money" data-sort="remaining" data-i18n="fees_remaining">Galdy</th>
+                <th class="sortable fe-col-salary-date" data-sort="salaryReceiveDate" data-i18n="fees_salary_date">Aýlyk
+                  alýan senesi</th>
+                <th class="sortable fe-col-worker fees-col-worker" data-sort="operatorName" data-i18n="th_placed_by">
+                  Işgär</th>
+                <th class="col-actions fees-col-action fe-col-action" data-i18n="th_actions">Hereket</th>
+              </tr>
+            </thead>
+            <tbody id="fees-tbody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="tab-reports" class="hidden">
+        <div class="report-period-bar">
+          <div class="report-period-group">
+            <span class="report-period-label" data-i18n="rpt_period">Döwür</span>
+            <div class="report-period-btns" role="group" data-i18n-aria="rpt_period">
+              <button type="button" class="btn btn-sm btn-ghost report-period-btn" data-period="day"
+                onclick="setReportPeriod('day')" data-i18n="rpt_day">Gün</button>
+              <button type="button" class="btn btn-sm btn-ghost report-period-btn" data-period="week"
+                onclick="setReportPeriod('week')" data-i18n="rpt_week">Hepde</button>
+              <button type="button" class="btn btn-sm btn-accent report-period-btn" data-period="month"
+                onclick="setReportPeriod('month')" data-i18n="rpt_month">Aý</button>
+              <button type="button" class="btn btn-sm btn-ghost report-period-btn" data-period="year"
+                onclick="setReportPeriod('year')" data-i18n="rpt_year">Ýyl</button>
+            </div>
+          </div>
+          <div class="report-period-group report-period-group-nav">
+            <span class="report-period-label" data-i18n="rpt_date">Sene</span>
+            <div class="report-nav" role="group" data-i18n-aria="rpt_date">
+              <button type="button" class="btn btn-sm btn-ghost report-nav-arrow" onclick="shiftReportPeriod(-1)"
+                data-i18n-title="rpt_prev" title="Öňki" aria-label="Öňki">‹</button>
+              <div class="report-anchor-wrap" id="report-anchor-wrap">
+                <!-- Default döwür = aý; value JS doldurýar (soňky maglumatly aý) -->
+                <input type="month" class="report-date-input" id="report-date" onchange="onReportDateChange()">
+              </div>
+              <button type="button" class="btn btn-sm btn-ghost report-nav-arrow" onclick="shiftReportPeriod(1)"
+                data-i18n-title="rpt_next" title="Indiki" aria-label="Indiki">›</button>
+              <button type="button" class="btn btn-sm btn-ghost" onclick="goReportToday()" data-i18n="rpt_today">Şu
+                gün</button>
+            </div>
+          </div>
+          <div class="report-period-actions">
+            <button class="btn btn-primary btn-sm" type="button" onclick="loadReport('analytics')"
+              data-i18n="btn_refresh">Täzele</button>
+            <button class="btn btn-ghost btn-sm" type="button" onclick="printReport()" data-i18n="btn_print_report">Çap
+              et</button>
+          </div>
+        </div>
+        <div id="report-output" class="report-output"></div>
+      </section>
+
+      <section id="tab-excel" class="hidden">
+        <div class="excel-panel">
+          <header class="excel-panel__head">
+            <h2>Excel — çykar / ýükle</h2>
+            <p>Ýyl/aý saýlap süzüp bilersiňiz, ýa-da <strong>Ählisi (tutuş)</strong> bilen bazanyň ählisini çykaryň.</p>
+          </header>
+
+          <div class="excel-step excel-step--period">
+            <div class="excel-step__num">1</div>
+            <div class="excel-step__body">
+              <h3>Döwür</h3>
+              <p class="excel-hint" style="margin:0 0 8px">
+                <strong>Ählisi</strong> — tutuş bazany çykarýar. Ýyl / aý saýlasaň diňe şol döwür.
+              </p>
+              <div class="excel-period-row">
+                <div class="excel-field">
+                  <label for="excel-export-year">Ýyl</label>
+                  <select id="excel-export-year">
+                    <option value="">Ählisi (tutuş)</option>
+                  </select>
+                </div>
+                <div class="excel-field">
+                  <label for="excel-export-month">Aý</label>
+                  <select id="excel-export-month" size="1">
+                    <option value="">Ählisi</option>
+                  </select>
+                </div>
+                <label class="excel-check" title="Bir ZIP: Excel + ähli surat. Täze PC-de şol ZIP-i ýükläň.">
+                  <input type="checkbox" id="excel-export-with-photos" checked>
+                  <span>Surat bilen (ZIP)</span>
+                </label>
+              </div>
+              <div id="excel-period-summary" class="excel-period-summary" aria-live="polite">
+                Döwür ýüklenýär…
+              </div>
+            </div>
+          </div>
+
+          <div class="excel-cols">
+            <div class="excel-step">
+              <div class="excel-step__num">2</div>
+              <div class="excel-step__body">
+                <h3>Çykar (export)</h3>
+                <p class="excel-hint">Saýlanan döwürdäki ýazgylary kompýutere ýükleýär. Suratly bolsa <strong>bir
+                    ZIP</strong> düşýär — 200 surat bir-birden däl.</p>
+                <div class="excel-actions">
+                  <button type="button" id="btn-export-anketas" class="btn btn-primary">
+                    Anketalar → Excel
+                  </button>
+                  <div class="excel-vac-export">
+                    <select id="excel-export-operator" title="Operator">
+                      <option value="">Ähli operatorlar</option>
+                    </select>
+                    <button type="button" id="btn-export-vacancies" class="btn btn-primary">
+                      Wakansiýalar → Excel
+                    </button>
+                  </div>
+                  <button type="button" id="btn-export-fees" class="btn btn-primary">
+                    Tölegler → Excel
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="excel-step">
+              <div class="excel-step__num excel-step__num--accent">3</div>
+              <div class="excel-step__body">
+                <h3>Ýükle (import)</h3>
+                <p class="excel-hint">
+                  Öň çykaran Excel ýa-da <strong>suratly ZIP</strong>.
+                  ZIP-de <code>26.7.66.jpg</code> → anketa № <code>26/7/66</code> awto baglanýar.
+                </p>
+                <div class="excel-import-block">
+                  <div class="excel-import-row">
+                    <span>Anketalar</span>
+                    <input type="file" id="import-anketa-file" accept=".xlsx,.xls,.zip">
+                    <button type="button" id="btn-import-anketas" class="btn btn-accent btn-sm">Ýükle</button>
+                  </div>
+                  <div class="excel-import-row">
+                    <span>Wakansiýalar</span>
+                    <input type="file" id="import-vacancy-file" accept=".xlsx,.xls">
+                    <button type="button" id="btn-import-vacancies" class="btn btn-accent btn-sm">Ýükle</button>
+                  </div>
+                  <div class="excel-import-row">
+                    <span>Tölegler</span>
+                    <input type="file" id="import-fee-file" accept=".xlsx,.xls">
+                    <button type="button" id="btn-import-fees" class="btn btn-accent btn-sm">Ýükle</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="excel-step excel-step--scan">
+            <div class="excel-step__num excel-step__num--muted">4</div>
+            <div class="excel-step__body">
+              <h3>Surat papkalary</h3>
+              <p class="excel-hint">
+                <strong>Skan</strong> we <strong>3×4</strong> papkalary <em>aýratyn</em> saýlaň — her biri öz ýoly.
+              </p>
+              <p id="scan-folder-status" class="excel-scan-status">Skan papkasy ýüklenýär…</p>
+              <p id="kici-folder-status" class="excel-scan-status">3×4 papkasy ýüklenýär…</p>
+              <div id="photo-disk-path-box" class="excel-scan-box" style="display:none">
+                <label for="photo-server-path">1) Skan anketalar (JPG)</label>
+                <div class="excel-scan-row">
+                  <input type="text" id="photo-server-path" placeholder="…\kerwen_kadr\suratlar">
+                  <button type="button" id="btn-photo-use-suratlar" class="btn btn-accent btn-sm">suratlar/</button>
+                  <button type="button" id="btn-photo-pick-server" class="btn btn-ghost btn-sm">Papkadan saýla</button>
+                  <button type="button" id="btn-photo-use-path" class="btn btn-primary btn-sm">Sakla</button>
+                </div>
+                <label for="photo-kici-path" style="margin-top:14px;display:block">2) 3×4 kici suratlar (anketa №.jpg)</label>
+                <div class="excel-scan-row">
+                  <input type="text" id="photo-kici-path" placeholder="Desktop\anketa_kici_suratlar">
+                  <button type="button" id="btn-photo-pick-kici" class="btn btn-ghost btn-sm">Papkadan saýla</button>
+                  <button type="button" id="btn-photo-use-kici-path" class="btn btn-primary btn-sm">Sakla</button>
+                  <button type="button" id="btn-photo-auto-link-kici" class="btn btn-accent btn-sm">№ boýunça bagla</button>
+                </div>
+                <p class="excel-hint" style="margin:8px 0 0">
+                  Faýl ady: <code>26.7.66.jpg</code> = anketa 26/7/66.
+                  3×4: kici papka + <strong>uploads</strong>-da şol № bilen rezerv.
+                  Awto: serwer açylanda we «№ boýunça bagla».
+                </p>
+              </div>
+              <p id="photo-lan-hint" class="excel-lan-hint" style="display:none"></p>
+            </div>
+          </div>
+
+          <div id="excel-result" class="excel-result"></div>
+        </div>
+      </section>
+
+      <section id="tab-users" class="hidden">
+        <div class="form-section">
+          <h3 id="user-form-title" data-i18n="user_new">Täze ulanyjy</h3>
+          <form id="user-form">
+            <input type="hidden" name="id" id="user-edit-id">
+            <div class="form-grid">
+              <div class="form-group">
+                <label data-i18n="label_full_name">Doly ady *</label>
+                <input name="fullName" id="user-fullName" required data-i18n-placeholder="ph_fullname_example"
+                  placeholder="Mysal: Myrat Berdiýew">
+              </div>
+              <div class="form-group">
+                <label data-i18n="label_username">Ulanyjy ady *</label>
+                <input name="username" id="user-username" required placeholder="operator2">
+              </div>
+              <div class="form-group">
+                <label><span data-i18n="label_password">Parol</span> <span id="user-pass-hint">*</span></label>
+                <input type="password" name="password" id="user-password" data-i18n-placeholder="ph_password"
+                  placeholder="iň azyndan 6 harp">
+              </div>
+              <div class="form-group">
+                <label data-i18n="label_role">Rol *</label>
+                <select name="role" id="user-role">
+                  <option value="operator">Operator</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label data-i18n="label_active">Işjeňmi?</label>
+                <select name="isActive" id="user-active">
+                  <option value="true" data-i18n="active_yes">Hawa — işjeň</option>
+                  <option value="false" data-i18n="active_no">Ýok — işjeň däl</option>
+                </select>
+                <small data-i18n="active_hint">Işjeň däl bolsa, ulanyjy panela girip bilmeýär</small>
+              </div>
+              <div class="form-group" id="user-delete-anketa-wrap">
+                <label data-i18n="label_can_delete_anketa">Anketa pozmak rugsaty</label>
+                <select name="canDeleteAnketa" id="user-can-delete-anketa">
+                  <option value="false">Ýok — pozup bilmeýär</option>
+                  <option value="true">Hawa — anketany pozup bilýär</option>
+                </select>
+                <small>Diňe operator üçin. Admin islendik wagt berip / aýryp bilýär.</small>
+              </div>
+            </div>
+            <div class="toolbar" style="margin-top:8px">
+              <button type="submit" class="btn btn-accent" id="user-submit-btn" data-i18n="btn_add">Goş</button>
+              <button type="button" class="btn btn-ghost" id="user-cancel-btn" onclick="resetUserForm()"
+                style="display:none" data-i18n="btn_cancel">Ýatyr</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="toolbar">
+          <input type="text" id="user-search" data-i18n-placeholder="ph_user_search" placeholder="Gözleg (ady / login)">
+          <select id="user-role-filter">
+            <option value="" data-i18n="all_roles">Ähli rollar</option>
+            <option value="operator">Operator</option>
+            <option value="admin">Admin</option>
+          </select>
+          <select id="user-active-filter">
+            <option value="" data-i18n="all_of_them">Ählisi</option>
+            <option value="true" data-i18n="active_only">Işjeň</option>
+            <option value="false" data-i18n="inactive_only">Işjeň däl</option>
+          </select>
+          <button class="btn btn-primary btn-sm" onclick="loadUsers()" data-i18n="btn_search">Gözle</button>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th data-i18n="th_id">ID</th>
+                <th data-i18n="th_full_name">Doly ady</th>
+                <th data-i18n="th_login">Login</th>
+                <th data-i18n="th_role">Rol</th>
+                <th data-i18n="th_is_active">Işjeňmi?</th>
+                <th>Anketa pozmak</th>
+                <th data-i18n="th_actions" class="col-actions">Hereket</th>
+              </tr>
+            </thead>
+            <tbody id="users-tbody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="tab-settings" class="hidden">
+        <div class="form-section" style="max-width:720px;margin-bottom:18px" id="option-lists-settings"></div>
+        <div class="form-section" style="max-width:560px">
+          <h3 style="margin-top:0" data-i18n="mail_settings_title">Kompaniýa e-poçtasy</h3>
+          <p class="muted" style="margin:0 0 14px;line-height:1.45" data-i18n="mail_settings_hint">
+            Admin bir gezek sazlaýar. Operatorlar / adminler deňeşdirmede diňe alyjy ýazyň → Ugrat — anketa faýllary
+            awtomatik gidýär.
+            Başga HR firma üçin hem şu ýerde öz Gmail + App Password goýuň.
+          </p>
+          <p id="mail-settings-status" class="muted" style="margin:0 0 12px;font-size:13px">…</p>
+          <div class="form-group" style="margin-bottom:10px">
+            <label for="mail-settings-user" data-i18n="mail_settings_user">Kompaniýa Gmail</label>
+            <input type="email" id="mail-settings-user" autocomplete="username" placeholder="hr@firma.com"
+              style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid #d8d2c6">
+          </div>
+          <div class="form-group" style="margin-bottom:12px">
+            <label for="mail-settings-pass" data-i18n="mail_settings_pass">App Password (16 harp)</label>
+            <input type="password" id="mail-settings-pass" autocomplete="new-password" placeholder="xxxx xxxx xxxx xxxx"
+              style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid #d8d2c6">
+            <small class="muted">
+              <a href="https://myaccount.google.com/signinoptions/two-step-verification" target="_blank"
+                rel="noopener">2-Step</a>
+              →
+              <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noopener">App Password</a>
+            </small>
+          </div>
+          <div class="toolbar" style="gap:8px;flex-wrap:wrap">
+            <button type="button" class="btn btn-accent" id="btn-mail-settings-save" onclick="saveCompanyMailSettings()"
+              data-i18n="mail_settings_save">Sakla we synag et</button>
+            <button type="button" class="btn btn-ghost" id="btn-mail-settings-clear"
+              onclick="clearCompanyMailSettings()" data-i18n="mail_settings_clear">Aýyr</button>
+          </div>
+        </div>
+      </section>
+
+      <div id="modal" class="modal-overlay hidden">
+        <div class="modal-panel">
+          <div class="modal-topbar">
+            <button type="button" class="btn-back" onclick="closeModal()">← <span data-i18n="back">Yza</span></button>
+          </div>
+          <div id="modal-content" class="modal-body"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="/js/branding.js?v=2"></script>
+  <script src="/js/mini-charts.js?v=7"></script>
+  <script src="/js/tk-date.js?v=4"></script>
+  <script src="/js/assignment-left-date.js?v=2"></script>
+  <script src="/js/assignment-company-direction.js?v=4"></script>
+  <script src="/js/assignment-salary-date.js?v=3"></script>
+  <script src="/js/i18n.js?v=75"></script>
+  <script src="/js/api.js?v=14"></script>
+  <script src="/js/option-lists.js?v=8"></script>
+  <script src="/js/comments.js?v=2"></script>
+  <script src="/js/admin.js?v=304"></script>
+  <script>
+    initTkDatePickers();
+    if (window.I18n) I18n.applyI18n();
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,630 @@
+﻿<!DOCTYPE html>
+<html lang="tk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kerwen Agenstwa — Prezintasýa</title>
+  <link rel="icon" type="image/png" href="/assets/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #1e242b;
+      --ink-soft: #4a5560;
+      --muted: #6b7580;
+      --paper: #f4f1ea;
+      --gold: #a6853d;
+      --gold-deep: #7a6230;
+      --slate: #2f3b46;
+      --slate-soft: #3d4a56;
+      --line: rgba(47, 59, 70, 0.12);
+      --white: #fffcf7;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      font-family: 'Manrope', sans-serif;
+      color: var(--ink);
+      background: #1a2026;
+    }
+
+    .deck {
+      height: 100%;
+      position: relative;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      padding: clamp(28px, 6vw, 72px) clamp(24px, 7vw, 96px);
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 0.35s ease, transform 0.35s ease;
+      background:
+        radial-gradient(ellipse 70% 55% at 0% 0%, rgba(166, 133, 61, 0.16), transparent 55%),
+        radial-gradient(ellipse 50% 40% at 100% 100%, rgba(61, 90, 115, 0.1), transparent 50%),
+        linear-gradient(145deg, #f7f4ed 0%, #ebe6dc 100%);
+    }
+
+    .slide.is-active {
+      display: flex;
+      opacity: 1;
+      transform: translateY(0);
+      z-index: 1;
+    }
+
+    .slide.is-title {
+      background:
+        radial-gradient(ellipse 80% 60% at 70% 20%, rgba(166, 133, 61, 0.22), transparent 50%),
+        linear-gradient(160deg, #2a343d 0%, #3a4652 55%, #2f3b46 100%);
+      color: var(--white);
+    }
+
+    .slide.is-dark {
+      background:
+        linear-gradient(160deg, #243039 0%, #2f3b46 100%);
+      color: var(--white);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: clamp(20px, 4vh, 40px);
+    }
+
+    .brand img {
+      height: clamp(36px, 5vh, 48px);
+      width: auto;
+      filter: drop-shadow(0 2px 8px rgba(0,0,0,0.15));
+    }
+
+    .brand-name {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: clamp(1.35rem, 2.4vw, 1.85rem);
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      line-height: 1.1;
+    }
+
+    .brand-sub {
+      font-size: 0.78rem;
+      opacity: 0.7;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .eyebrow {
+      display: inline-block;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 14px;
+    }
+
+    .slide.is-title .eyebrow,
+    .slide.is-dark .eyebrow {
+      color: #d4b56a;
+    }
+
+    h1 {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: clamp(2.4rem, 6.5vw, 4.4rem);
+      font-weight: 700;
+      line-height: 1.08;
+      max-width: 16ch;
+      margin-bottom: 18px;
+    }
+
+    h2 {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: clamp(1.9rem, 4.2vw, 3rem);
+      font-weight: 700;
+      line-height: 1.15;
+      margin-bottom: 18px;
+      max-width: 22ch;
+    }
+
+    .lead {
+      font-size: clamp(1.05rem, 2vw, 1.35rem);
+      line-height: 1.55;
+      max-width: 38ch;
+      color: var(--ink-soft);
+      font-weight: 500;
+    }
+
+    .slide.is-title .lead,
+    .slide.is-dark .lead {
+      color: rgba(255, 252, 247, 0.78);
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: clamp(14px, 2.5vw, 22px);
+      margin-top: 28px;
+      max-width: 980px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: clamp(12px, 2vw, 18px);
+      margin-top: 28px;
+      max-width: 1100px;
+    }
+
+    .card {
+      background: rgba(255, 252, 247, 0.72);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: clamp(16px, 2.2vw, 22px);
+      backdrop-filter: blur(6px);
+    }
+
+    .slide.is-dark .card {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .card h3 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--slate);
+    }
+
+    .slide.is-dark .card h3 { color: #f0e6d0; }
+
+    .card p, .card li {
+      font-size: 0.95rem;
+      line-height: 1.5;
+      color: var(--ink-soft);
+    }
+
+    .slide.is-dark .card p,
+    .slide.is-dark .card li {
+      color: rgba(255, 252, 247, 0.72);
+    }
+
+    .card ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .card li::before {
+      content: '';
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--gold);
+      margin-right: 10px;
+      vertical-align: middle;
+    }
+
+    .num {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--gold);
+      line-height: 1;
+      margin-bottom: 10px;
+    }
+
+    .flow {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      margin-top: 32px;
+      max-width: 1000px;
+    }
+
+    .flow-step {
+      background: var(--white);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 12px 18px;
+      font-weight: 700;
+      font-size: 0.92rem;
+      color: var(--slate);
+    }
+
+    .flow-arrow {
+      color: var(--gold);
+      font-weight: 700;
+      font-size: 1.2rem;
+    }
+
+    .roles {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      margin-top: 28px;
+      max-width: 860px;
+    }
+
+    .role {
+      padding: 22px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: var(--white);
+    }
+
+    .role strong {
+      display: block;
+      font-size: 1.15rem;
+      margin-bottom: 8px;
+      color: var(--slate);
+    }
+
+    .cta-line {
+      margin-top: 28px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #d4b56a;
+    }
+
+    .footer-note {
+      margin-top: 36px;
+      font-size: 0.85rem;
+      opacity: 0.65;
+    }
+
+    .nav-bar {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 14px 22px 18px;
+      background: linear-gradient(to top, rgba(26, 32, 38, 0.92), transparent);
+      color: #fff;
+      pointer-events: none;
+    }
+
+    .nav-bar > * { pointer-events: auto; }
+
+    .dots {
+      display: flex;
+      gap: 7px;
+      flex-wrap: wrap;
+      justify-content: center;
+      flex: 1;
+    }
+
+    .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(255, 255, 255, 0.28);
+      cursor: pointer;
+    }
+
+    .dot.is-on { background: #d4b56a; }
+
+    .nav-btns {
+      display: flex;
+      gap: 8px;
+    }
+
+    .nav-btns button,
+    .hint {
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+      border-radius: 10px;
+      padding: 8px 14px;
+      font-family: inherit;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .nav-btns button:hover { background: rgba(212, 181, 106, 0.25); }
+
+    .hint {
+      cursor: default;
+      opacity: 0.75;
+      font-weight: 500;
+    }
+
+    .counter {
+      min-width: 52px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      font-size: 0.85rem;
+      opacity: 0.8;
+    }
+
+    @media (max-width: 820px) {
+      .grid-2, .grid-3, .roles { grid-template-columns: 1fr; }
+      .hint { display: none; }
+      .flow-arrow { display: none; }
+    }
+
+    @media print {
+      body { overflow: visible; background: #fff; }
+      .nav-bar { display: none; }
+      .slide {
+        position: relative;
+        display: flex !important;
+        opacity: 1 !important;
+        transform: none !important;
+        page-break-after: always;
+        min-height: 100vh;
+      }
+    }
+  </style>
+  <script src="/js/fit-screen.js?v=3" defer></script>
+</head>
+<body>
+  <div class="deck" id="deck">
+
+    <section class="slide is-title is-active" data-slide>
+      <div class="brand">
+        <img src="/assets/logo.png" alt="Kerwen" onerror="this.style.display='none'">
+        <div>
+          <div class="brand-name">Kerwen Agenstwa</div>
+          <div class="brand-sub">Kadrlar Agentligi</div>
+        </div>
+      </div>
+      <p class="eyebrow">Sanly kadr platformasy</p>
+      <h1>Iş gözleýjini firmalar bilen birleşdirýän ulgam</h1>
+      <p class="lead">Anketa, wakansiýa, deňeşdirme, hödürleme we hasabat — bir panelde.</p>
+      <p class="footer-note">«Täjir Kerweni» Hojalyk Jemgyýeti</p>
+    </section>
+
+    <section class="slide" data-slide>
+      <p class="eyebrow">Meseläniň çözgüdi</p>
+      <h2>Näme üçin Kerwen Kadr?</h2>
+      <p class="lead">Excel we telefon bilen işlemek ýerine — bir sanly iş akymy.</p>
+      <div class="grid-2">
+        <div class="card">
+          <h3>Öň</h3>
+          <ul>
+            <li>Maglumatlar paýlaşylan faýllarda</li>
+            <li>Gabat gelýän dalaşgäri gözlemek uzak</li>
+            <li>Hasabat el bilen ýygnalýar</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Indi</h3>
+          <ul>
+            <li>Ähli anketa we wakansiýa bir bazada</li>
+            <li>Awtomatiki deňeşdirme (%)</li>
+            <li>Hasabat we Excel import/export</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-slide>
+      <p class="eyebrow">Esasy mümkinçilikler</p>
+      <h2>Panel näme edýär?</h2>
+      <div class="grid-3">
+        <div class="card">
+          <div class="num">01</div>
+          <h3>Anketalar</h3>
+          <p>1–4 wezipe, suratlar, bilim, tejribe. Işleýär / işlemeýär statusy.</p>
+        </div>
+        <div class="card">
+          <div class="num">02</div>
+          <h3>Wakansiýalar</h3>
+          <p>Firma, wezipe, hak, forum operator we jogapkär (firma wekili).</p>
+        </div>
+        <div class="card">
+          <div class="num">03</div>
+          <h3>Deňeşdirme</h3>
+          <p>Wakansiýa boýunça «Islanok» dalaşgärleri % bilen tapýar.</p>
+        </div>
+        <div class="card">
+          <div class="num">04</div>
+          <h3>Hödürleme</h3>
+          <p>Saýlanan dalaşgäri firmaya hödürläp, ýagdaýyny yzarlaýar.</p>
+        </div>
+        <div class="card">
+          <div class="num">05</div>
+          <h3>Hasabatlar</h3>
+          <p>Umumy, operator, wezipe we işe ýerleşenler boýunça sanawlar.</p>
+        </div>
+        <div class="card">
+          <div class="num">06</div>
+          <h3>Excel</h3>
+          <p>Mähri formatynda ýükle / çykar — köne sanawlary geçirmek aňsat.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-slide>
+      <p class="eyebrow">Iş prosesi</p>
+      <h2>Bir dalaşgärden işe çenli</h2>
+      <div class="flow">
+        <span class="flow-step">1. Anketa</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step">2. Wakansiýa</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step">3. Dalaşgär tap</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step">4. Hödürle</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step">5. Işe ýerleş</span>
+      </div>
+      <div class="grid-2" style="margin-top:36px">
+        <div class="card">
+          <h3>Operator</h3>
+          <p>Anketa / wakansiýa goşýar, deňeşdirýär, hödürleýär we ýagdaýy täzeleýär.</p>
+        </div>
+        <div class="card">
+          <h3>Admin</h3>
+          <p>Ähli hukuk + ulanyjylary dolandyrýar, maglumatlary pozup bilýär.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide is-dark" data-slide>
+      <p class="eyebrow">Kim üçin</p>
+      <h2>Iki tarap — bir platforma</h2>
+      <div class="roles">
+        <div class="role" style="background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.12);color:#fff">
+          <strong style="color:#f0e6d0">Açyk sahypa</strong>
+          <p style="color:rgba(255,252,247,0.75);margin-top:8px;line-height:1.5">
+            Iş gözleýji anketany doldurýar we açyk wakansiýalary görýär.
+            Giriş diňe gizlin baglanyşyk bilen.
+          </p>
+        </div>
+        <div class="role" style="background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.12);color:#fff">
+          <strong style="color:#f0e6d0">Admin panel</strong>
+          <p style="color:rgba(255,252,247,0.75);margin-top:8px;line-height:1.5">
+            Agentligiň işgärleri ähli maglumaty dolandyrýar:
+            filtr, deňeşdirme, hasabat, Excel.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-slide>
+      <p class="eyebrow">Aýratynlyklar</p>
+      <h2>Işi tizleşdirýän jikme-jikler</h2>
+      <div class="grid-2">
+        <div class="card">
+          <h3>Akylly gözleg</h3>
+          <ul>
+            <li>Sene, wezipe, telefon, ýagdaý filterleri</li>
+            <li>Türkmençe sene kalendary</li>
+            <li>Firma adyna basyp ähli wakansiýalary görmek</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Hyzmat sapasy</h3>
+          <ul>
+            <li>Kameradan 1–4 surat</li>
+            <li>Anketa çap / şertnama</li>
+            <li>Hödürlenenleriň sanawy we statusy</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-slide>
+      <p class="eyebrow">Netije</p>
+      <h2>Agentlik üçin peýdasy</h2>
+      <div class="grid-3">
+        <div class="card">
+          <div class="num">⏱</div>
+          <h3>Wagt tygşytlylygy</h3>
+          <p>Gabat gelýän dalaşgäri el bilen gözlemegiň ýerine % bilen sanaw.</p>
+        </div>
+        <div class="card">
+          <div class="num">📋</div>
+          <h3>Tertip</h3>
+          <p>Kim hödürlendi, haýsy firma, haýsy ýagdaý — bir ýerde.</p>
+        </div>
+        <div class="card">
+          <div class="num">📈</div>
+          <h3>Hasabat</h3>
+          <p>Operator we wezipe boýunça aýlyk / ýolbaşçy üçin taýýar sanaw.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide is-title" data-slide>
+      <div class="brand">
+        <img src="/assets/logo.png" alt="Kerwen" onerror="this.style.display='none'">
+        <div>
+          <div class="brand-name">Kerwen Agenstwa</div>
+          <div class="brand-sub">Sagboluň</div>
+        </div>
+      </div>
+      <h1>Soraglaryňyz barmy?</h1>
+      <p class="lead">Demo: admin paneli we açyk anketa sahypasy.</p>
+      <p class="cta-line">kadr.kerwen@gmail.com · +993 65 24 28 56</p>
+      <p class="footer-note">Prezintasýany öňe / yza: → ← ýa-da boşluk · Esc — birinji slaýd</p>
+    </section>
+
+  </div>
+
+  <div class="nav-bar">
+    <span class="hint">← → / boşluk</span>
+    <div class="dots" id="dots"></div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="nav-btns">
+        <button type="button" id="btn-prev" aria-label="Öňki">←</button>
+        <button type="button" id="btn-next" aria-label="Indiki">→</button>
+      </div>
+      <span class="counter" id="counter">1 / 1</span>
+    </div>
+  </div>
+
+  <script>
+    const slides = [...document.querySelectorAll('[data-slide]')];
+    const dotsBox = document.getElementById('dots');
+    const counter = document.getElementById('counter');
+    let i = 0;
+
+    slides.forEach((_, idx) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'dot' + (idx === 0 ? ' is-on' : '');
+      b.setAttribute('aria-label', `Slaýd ${idx + 1}`);
+      b.addEventListener('click', () => go(idx));
+      dotsBox.appendChild(b);
+    });
+
+    function go(n) {
+      i = (n + slides.length) % slides.length;
+      slides.forEach((s, idx) => s.classList.toggle('is-active', idx === i));
+      [...dotsBox.children].forEach((d, idx) => d.classList.toggle('is-on', idx === i));
+      counter.textContent = `${i + 1} / ${slides.length}`;
+    }
+
+    document.getElementById('btn-prev').onclick = () => go(i - 1);
+    document.getElementById('btn-next').onclick = () => go(i + 1);
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        e.preventDefault();
+        go(i + 1);
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        e.preventDefault();
+        go(i - 1);
+      } else if (e.key === 'Home' || e.key === 'Escape') {
+        go(0);
+      } else if (e.key === 'End') {
+        go(slides.length - 1);
+      }
+    });
+
+    let touchX = null;
+    document.addEventListener('touchstart', (e) => {
+      touchX = e.changedTouches[0].screenX;
+    }, { passive: true });
+    document.addEventListener('touchend', (e) => {
+      if (touchX == null) return;
+      const dx = e.changedTouches[0].screenX - touchX;
+      if (Math.abs(dx) > 50) go(dx < 0 ? i + 1 : i - 1);
+      touchX = null;
+    }, { passive: true });
+
+    go(0);
+  </script>
+</body>
+</html>

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="tk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kerwen Agenstwa</title>
+  <link rel="icon" type="image/png" href="/assets/favicon.png">
+  <link rel="apple-touch-icon" href="/assets/favicon.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="stylesheet" href="/css/style.css?v=68">
+  <script src="/js/fit-screen.js?v=3" defer></script>
+</head>
+<body>
+  <header class="header">
+    <div class="container header-inner">
+      <div class="logo-group">
+        <img src="/assets/logo.png" alt="Kerwen Logo" data-brand-logo>
+        <div class="logo-text">
+          <h1 data-brand="tagline">Kadrlar Agentligi</h1>
+          <p data-brand="short">Kerwen</p>
+        </div>
+      </div>
+      <nav class="nav">
+        <a href="/" class="active">Baş sahypa</a>
+        <a href="/anketa.html">Anketa doldur</a>
+        <a href="/vacancies.html">Wakansiýalar</a>
+        <a href="/admin/login.html">Giriş</a>
+        <a href="/open-close" title="Açyk sahypany ýap">×</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="container">
+      <h2>Iş gözleýärsiňizmi?</h2>
+      <p data-brand="hero">Kadrlar Agentligi Kerwen — işe ýerleşmek üçin ygtybarly hyzmat. Anketa dolduryň, wakansiýalary gözden geçiriň.</p>
+      <div class="hero-actions">
+        <a href="/anketa.html" class="btn btn-accent">Anketa doldur</a>
+        <a href="/vacancies.html" class="btn btn-outline">Wakansiýalary gör</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="container cards" id="stats-cards">
+    <div class="card">
+      <h3>Jemi anketalar</h3>
+      <p class="stat" id="stat-anketas">-</p>
+    </div>
+    <div class="card">
+      <h3>Açyk wakansiýalar</h3>
+      <p class="stat" id="stat-vacancies">-</p>
+    </div>
+    <div class="card">
+      <h3>Işe ýerleşenler</h3>
+      <p class="stat" id="stat-employed">-</p>
+    </div>
+  </section>
+
+  <section class="container section">
+    <h2 class="section-title">Hyzmatlarymyz</h2>
+    <div class="cards" style="padding-top:0">
+      <div class="card">
+        <h3>Anketa</h3>
+        <p>Iş gözleýji hökmünde anketany dolduryň. Maglumatlaryňyz bazada saklanar we size laýyk iş tapylýar.</p>
+      </div>
+      <div class="card">
+        <h3>Wakansiýalar</h3>
+        <p>Häzirki wagtda bar bolan boş iş ýerlerini gözden geçiriň we arza beriň.</p>
+      </div>
+      <div class="card">
+        <h3>Şertnama</h3>
+        <p>Işe ýerleşen wagtyňyz hyzmat şertnamasy bilen resmileşdirilýär.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; 2026 <span data-brand="tagline">Kadrlar Agentligi</span> <span data-brand="short">Kerwen</span> — <span data-brand="company">"Täjir Kerweni" Hojalyk Jemgyýeti</span></p>
+      <p>Email: <a href="mailto:kadr.kerwen@gmail.com" data-brand="email">kadr.kerwen@gmail.com</a> | Tel: <span data-brand="phone">+993 65 24 28 56</span></p>
+    </div>
+  </footer>
+
+  <script src="/js/branding.js?v=2"></script>
+  <script src="/js/api.js?v=15"></script>
+  <script>
+    async function loadStats() {
+      try {
+        const [anketaRes, vacancyRes] = await Promise.all([
+          fetch('/api/anketas/stats', { headers: { Authorization: 'Bearer ' + ((window.Auth && Auth.getToken()) || sessionStorage.getItem('token') || '') } }),
+          fetch('/api/vacancies/public?limit=1'),
+        ]);
+
+        if (anketaRes.ok) {
+          const d = await anketaRes.json();
+          document.getElementById('stat-anketas').textContent = d.data?.total ?? '-';
+          document.getElementById('stat-employed').textContent = d.data?.isleyar ?? '-';
+        }
+
+        const vData = await vacancyRes.json();
+        document.getElementById('stat-vacancies').textContent = vData.data?.pagination?.total ?? vData.data?.items?.length ?? '-';
+      } catch (e) {
+        console.log('Statistika ýüklenmedi');
+      }
+    }
+    loadStats();
+  </script>
+</body>
+</html>

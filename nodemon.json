@@ -1,0 +1,13 @@
+{
+  "watch": ["src"],
+  "ext": "js,json",
+  "ignore": [
+    "node_modules",
+    "logs",
+    "*.log",
+    ".server.pid",
+    "src/cmd"
+  ],
+  "delay": 400,
+  "legacyWatch": true
+}

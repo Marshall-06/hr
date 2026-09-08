@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="tk">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Täze wakansiýa — Kerwen Agenstwa</title>
+  <link rel="icon" type="image/png" href="/assets/favicon.png">
+  <link rel="apple-touch-icon" href="/assets/favicon.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="stylesheet" href="/css/style.css?v=109">
+  <script src="/js/fit-screen.js?v=3" defer></script>
+</head>
+
+<body class="admin-page" data-brand-page="vacancy-new">
+  <header class="header admin-header">
+    <div class="container header-inner">
+      <div class="logo-group">
+        <img src="/assets/logo.png" alt="Kerwen" style="height:40px" data-brand-logo>
+        <div class="logo-text">
+          <h1>Täze wakansiýa</h1>
+          <p>Admin / Operator</p>
+        </div>
+      </div>
+      <nav class="nav">
+        <button type="button" class="btn btn-sm btn-ghost" id="btn-nav-back">← Yza</button>
+        <button class="btn btn-sm btn-danger" type="button" onclick="logout()">Çykmak</button>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container section" style="max-width:980px">
+    <h2 class="section-title">Täze wakansiýa goş</h2>
+    <div id="alert-box"></div>
+
+    <form id="vacancy-form" class="form-section">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Kabul edilen senesi *</label>
+          <input type="date" class="tk-date" name="vacancyDate" id="vacancy-date" required
+            title="Wakansiýa kabul edilen sene" placeholder="gg.aa.ýýýý">
+          <small>Wakansiýany alan / kabul eden gün (№-den soň görkezilýär)</small>
+        </div>
+        <div class="form-group"><label>Kärhananyň ady *</label><input name="companyName" required></div>
+        <div class="form-group"><label>Wezipe * <small>(1 forum = 1 wezipe)</small></label><input name="position"
+            required placeholder="Mysal: Satyjy"></div>
+        <div class="form-group"><label>Aýlyk haky</label><input name="salary"></div>
+        <div class="form-group"><label>Ýerleşýän ýeri</label><input name="location"></div>
+        <div class="form-group"><label>Iş wagty</label><input name="workHours" placeholder="09:00-18:00"></div>
+        <div class="form-group"><label>Dynç güni</label><input name="dayOff"></div>
+        <div class="form-group"><label>Tejribe</label>
+          <select name="experience" data-option-list="experience" data-option-title="Tejribe">
+            <option>Tejribeli</option>
+            <option>Tejribesiz</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Bilim</label><input name="education" value="Soralanmaýar"></div>
+        <div class="form-group"><label>Jynsy</label>
+          <select name="gender" data-option-list="gender" data-option-title="Jyns">
+            <option value="Saýlanmaýar">Saýlanmaýar</option>
+            <option>Erkek</option>
+            <option value="Ayal">Aýal</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Maşgala ýagdaýy</label>
+          <input type="text" name="maritalStatus" id="vacancy-marital" list="vacancy-marital-list"
+            placeholder="Saýlaň ýa-da ýazyň" autocomplete="off">
+          <datalist id="vacancy-marital-list">
+            <option value="Maşgalaly"></option>
+            <option value="Sallah"></option>
+            <option value="Aýrylyşan"></option>
+            <option value="Durmuşa çykmadyk"></option>
+            <option value="Soralanmaýar"></option>
+          </datalist>
+          <small class="muted">Sanawdan saýlaň ýa-da özüňiz ýazyň</small>
+        </div>
+        <div class="form-group">
+          <label>Şahsy awtoulag</label>
+          <div class="bar-yok-field" data-bar-yok-field>
+            <select class="bar-yok-select" aria-label="Şahsy awtoulag">
+              <option value="Ýok">Ýok</option>
+              <option value="Bar">Bar</option>
+            </select>
+            <input type="text" class="bar-yok-text" maxlength="100" autocomplete="off"
+              placeholder="Mysal: Toyota Camry">
+            <input type="hidden" name="hasCar" class="bar-yok-hidden" value="Ýok">
+          </div>
+          <small class="muted">Ýok — üýtgedilmeýär; Bar — goşmaça maglumat ýazyp bilersiňiz</small>
+        </div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label>Bilmeli diller</label>
+          <div class="checkbox-grid" id="vacancy-lang-grid"></div>
+          <div class="extra-skills" id="vacancy-lang-extra"></div>
+          <div class="toolbar" style="margin:8px 0 0">
+            <input type="text" id="vacancy-lang-custom" placeholder="Goşmaça dil...">
+            <button type="button" class="btn btn-sm btn-ghost" onclick="addVacancyExtra('lang')">+ Dil goş</button>
+          </div>
+          <input type="hidden" name="languages" id="vacancy-languages-hidden">
+        </div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label>Kompýuter programmalary</label>
+          <div class="checkbox-grid" id="vacancy-prog-grid"></div>
+          <div class="extra-skills" id="vacancy-prog-extra"></div>
+          <div class="toolbar" style="margin:8px 0 0">
+            <input type="text" id="vacancy-prog-custom" placeholder="Goşmaça programma...">
+            <button type="button" class="btn btn-sm btn-ghost" onclick="addVacancyExtra('prog')">+ Programma
+              goş</button>
+          </div>
+          <input type="hidden" name="computerPrograms" id="vacancy-programs-hidden">
+        </div>
+        <div class="form-group"><label>Ýaş aralygy</label><input name="ageRange" placeholder="18-35"></div>
+        <div class="form-group"><label>Propiska</label><input name="registration" value="Soralanmaýar"></div>
+        <div class="form-group"><label>Işgär sany</label><input name="workersNeeded" value="1"></div>
+        <div class="form-group"><label>Kärhana ugry</label>
+          <select name="companyDirection" data-option-list="company_directions" data-option-title="Kärhana ugurlary">
+            <option>Sowda</option>
+            <option>Gurluşyk</option>
+            <option>Hyzmat</option>
+            <option>Bilim</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Ýagdaý</label>
+          <select name="status">
+            <option value="Acyk">Açyk</option>
+            <option value="Yapyk">Ýapyk</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Ýapylmagynyň sebäbi</label>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <select name="closeReason" id="vacancy-close-reason" data-option-list="vacancy_close_reasons"
+              data-option-title="Wakansiýa ýapylma sebäpleri" data-option-empty data-option-empty-label="-"
+              style="flex:1;min-width:180px">
+              <option value="">-</option>
+              <option value="Bizden alyndy">Bizden alyndy</option>
+              <option value="Bizden alynmady">Bizden alynmady</option>
+              <option value="Indi saýlanmaly">Indi saýlanmaly</option>
+              <option value="Bile işleşmek islemediler">Bile işleşmek islemediler</option>
+            </select>
+          </div>
+          <small class="muted admin-only hidden">Sanawy diňe admin düzedip / goşup bilýär</small>
+        </div>
+        <div class="form-group"><label>Forum operator *</label>
+          <select name="acceptedByUserId" id="vacancy-forum-operator" required>
+            <option value="">Ýüklenýär...</option>
+          </select>
+          <small id="vacancy-forum-hint">
+            Wakansiýany goşan operator. Excel import: «Forum operator» sütüni — ulanyjynyň doly ady bilen gabat gelsin.
+          </small>
+        </div>
+        <div class="form-group">
+          <label>Jogapkär ady</label>
+          <div id="vacancy-name-rows" class="vac-multi-rows"></div>
+          <button type="button" class="btn btn-sm btn-ghost" id="btn-add-vacancy-name">+ Ýene jogapkär</button>
+          <input type="hidden" name="contactName" id="vacancy-contact-name">
+        </div>
+        <div class="form-group">
+          <label>Telefon</label>
+          <div id="vacancy-phone-rows" class="vac-multi-rows"></div>
+          <button type="button" class="btn btn-sm btn-ghost" id="btn-add-vacancy-phone">+ Ýene nomer</button>
+          <input type="hidden" name="contactPhone" id="vacancy-contact-phone">
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <div id="vacancy-email-rows" class="vac-multi-rows"></div>
+          <button type="button" class="btn btn-sm btn-ghost" id="btn-add-vacancy-email">+ Ýene email</button>
+          <input type="hidden" name="contactEmail" id="vacancy-contact-email">
+        </div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label>Işiň düşündirişi</label><textarea name="jobDescription" rows="4"></textarea>
+        </div>
+      </div>
+      <div class="toolbar" style="margin-top:16px">
+        <button type="submit" class="btn btn-accent">Wakansiýa goş</button>
+        <button type="button" class="btn btn-ghost" id="btn-nav-cancel">Ýatyr</button>
+      </div>
+    </form>
+  </div>
+
+  <script src="/js/branding.js?v=2"></script>
+  <script src="/js/api.js?v=14"></script>
+  <script src="/js/tk-date.js?v=4"></script>
+  <script src="/js/option-lists.js?v=8"></script>
+  <script src="/js/bar-yok-field.js?v=1"></script>
+  <script>
+    if (!requireAuth()) throw new Error('Auth required');
+    const _qp = new URLSearchParams(location.search);
+    window.VACANCY_RETURN_TAB = _qp.get('return') || 'vacancies';
+    window.VACANCY_EDIT_ID = _qp.get('id') || '';
+    function vacGoBack() {
+      if (window.EscNav?.goBack) {
+        EscNav.goBack();
+        return;
+      }
+      if (history.length > 1) {
+        history.back();
+        return;
+      }
+      location.href = '/admin/dashboard.html?tab=vacancies';
+    }
+    document.getElementById('btn-nav-back')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      vacGoBack();
+    });
+    document.getElementById('btn-nav-cancel')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      vacGoBack();
+    });
+    const _vb = document.getElementById('btn-nav-back');
+    if (_vb) _vb.dataset.navBound = '1';
+  </script>
+  <script src="/js/vacancy-form.js?v=15"></script>
+</body>
+
+</html>

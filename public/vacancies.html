@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="tk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wakansiýalar — Kerwen Agenstwa</title>
+  <link rel="icon" type="image/png" href="/assets/favicon.png">
+  <link rel="apple-touch-icon" href="/assets/favicon.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="stylesheet" href="/css/style.css?v=68">
+  <script src="/js/fit-screen.js?v=3" defer></script>
+</head>
+<body data-brand-page="vacancies">
+  <header class="header">
+    <div class="container header-inner">
+      <div class="logo-group">
+        <img src="/assets/logo.png" alt="Kerwen Logo" data-brand-logo>
+        <div class="logo-text"><h1 data-brand="tagline">Kadrlar Agentligi</h1><p data-brand="short">Kerwen</p></div>
+      </div>
+      <nav class="nav">
+        <a href="/">Baş sahypa</a>
+        <a href="/anketa.html">Anketa doldur</a>
+        <a href="/vacancies.html" class="active">Wakansiýalar</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container section">
+    <h2 class="section-title">Açyk wakansiýalar</h2>
+    <div class="toolbar">
+      <input type="text" id="search" placeholder="Gözleg (wezipe, kärhana)...">
+      <button class="btn btn-primary" onclick="loadVacancies()">Gözle</button>
+    </div>
+    <div id="vacancy-list" class="vacancy-list"></div>
+    <div id="pagination" class="toolbar" style="justify-content:center"></div>
+  </div>
+
+  <footer class="footer">
+    <div class="container"><p>&copy; 2026 <span data-brand="tagline">Kadrlar Agentligi</span> <span data-brand="short">Kerwen</span></p></div>
+  </footer>
+
+  <script src="/js/branding.js?v=2"></script>
+  <script src="/js/api.js?v=15"></script>
+  <script>
+    let currentPage = 1;
+
+    async function loadVacancies(page = 1) {
+      currentPage = page;
+      const search = document.getElementById('search').value;
+      const params = new URLSearchParams({ page, limit: 12 });
+      if (search) params.set('search', search);
+
+      try {
+        const res = await api.get(`/vacancies/public?${params}`);
+        const list = document.getElementById('vacancy-list');
+        const items = res.data.items || [];
+
+        if (!items.length) {
+          list.innerHTML = '<p style="color:#666">Häzirki wagtda açyk wakansiýa ýok.</p>';
+          return;
+        }
+
+        list.innerHTML = items.map((v) => `
+          <div class="vacancy-card">
+            <h4>${v.position || 'Wezipe görkezilmedik'}</h4>
+            <p class="company">${v.companyName || ''}</p>
+            <p class="salary">${v.salary ? '💰 ' + v.salary : ''}</p>
+            <p class="meta">📍 ${v.location || '-'} | ⏰ ${v.workHours || '-'} | 👤 ${v.gender || 'Saýlanmaýar'}</p>
+            <p class="meta">Tejribe: ${v.experience || '-'} | Bilim: ${v.education || '-'}</p>
+            <p style="margin-top:10px;font-size:0.9rem">${v.jobDescription || ''}</p>
+            <a href="/anketa.html" class="btn btn-sm btn-accent" style="margin-top:12px;display:inline-block">Arza ber</a>
+          </div>
+        `).join('');
+
+        const pag = res.data.pagination;
+        document.getElementById('pagination').innerHTML = pag.totalPages > 1
+          ? Array.from({ length: pag.totalPages }, (_, i) =>
+            `<button class="btn btn-sm ${i + 1 === page ? 'btn-accent' : 'btn-primary'}" onclick="loadVacancies(${i + 1})">${i + 1}</button>`
+          ).join('')
+          : '';
+      } catch (e) {
+        document.getElementById('vacancy-list').innerHTML = '<p style="color:red">Wakansiýalar ýüklenmedi</p>';
+      }
+    }
+
+    loadVacancies();
+    document.getElementById('search').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') loadVacancies();
+    });
+  </script>
+</body>
+</html>

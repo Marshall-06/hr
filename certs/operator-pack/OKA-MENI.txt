@@ -1,0 +1,8 @@
+﻿OPERATOR PC (bir gezek):
+1) 2-sertifikat-ynamly.bat — Advanced/Proceed bolmaz
+2) 1-hosts-gur.bat — KerwenKadr adyny IP-a baglaýar
+3) Brauzeri ýapyp açyň
+4) Giriş: https://KerwenKadr:8443/admin/login.html
+   ýa-da: https://192.168.2.10:8443/admin/login.html
+
+IP üýtgände admin täzeden tools\set-static-ip.ps1 / bu paketi täzelär.

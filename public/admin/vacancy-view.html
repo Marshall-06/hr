@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="tk">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wakansiýa — Kerwen Agenstwa</title>
+  <link rel="icon" type="image/png" href="/assets/favicon.png">
+  <link rel="apple-touch-icon" href="/assets/favicon.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="stylesheet" href="/css/style.css?v=109">
+  <script src="/js/fit-screen.js?v=3" defer></script>
+  <style>
+    .vac-view-head {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .vac-view-field {
+      width: 100%;
+      min-height: 42px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      font-size: 0.92rem;
+      background: var(--surface-2);
+      color: var(--ink);
+      line-height: 1.4;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .vac-view-form .check-item {
+      cursor: default;
+      opacity: 0.95;
+    }
+
+    .vac-view-form .check-item.is-on,
+    .vac-view-form .check-item:has(input:checked) {
+      border-color: #c9b07a;
+      background: var(--accent-soft);
+    }
+
+    .vac-view-form .check-item input {
+      pointer-events: none;
+    }
+  </style>
+</head>
+
+<body class="admin-page" data-brand-page="vacancy-view">
+  <header class="header admin-header">
+    <div class="container header-inner">
+      <div class="logo-group">
+        <img src="/assets/logo.png" alt="Kerwen" style="height:40px" data-brand-logo>
+        <div class="logo-text">
+          <h1>Wakansiýa maglumaty</h1>
+          <p id="vacancy-number">-</p>
+        </div>
+      </div>
+      <nav class="nav">
+        <button type="button" class="btn btn-sm btn-primary" id="btn-nav-back">← Yza</button>
+        <a class="btn btn-sm btn-accent" id="btn-edit-vacancy" href="#">Üýtget</a>
+        <button class="btn btn-sm btn-ghost" type="button" id="btn-match-vacancy">Dalaşgär tap</button>
+      </nav>
+    </div>
+  </header>
+
+  <main id="content">
+    <p class="muted container" style="padding:20px">Ýüklenýär...</p>
+  </main>
+
+  <script src="/js/branding.js?v=2"></script>
+  <script src="/js/api.js?v=14"></script>
+  <script src="/js/comments.js?v=2"></script>
+  <script src="/js/vacancy-view.js?v=9"></script>
+</body>
+
+</html>

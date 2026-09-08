@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="tk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <title>Anketa + şertnama çap</title>
+  <link rel="icon" type="image/png" href="/assets/favicon.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="stylesheet" href="/css/print-lock.css?v=1">
+  <link rel="stylesheet" href="/css/anketa-print.css?v=36">
+  <link rel="stylesheet" href="/css/anketa-view.css?v=11">
+  <link rel="stylesheet" href="/css/contract-print.css?v=19">
+  <link rel="stylesheet" href="/css/anketa-packet-print.css?v=3">
+</head>
+<body data-no-fit="1" class="packet-print print-locked">
+  <div class="no-print toolbar">
+    <span class="toolbar-title">Anketa + şertnama (yzygiderli çap)</span>
+    <button type="button" class="tb-back" data-print-back>← Yza</button>
+    <button type="button" class="tb-print" data-print-do>Çap et</button>
+    <button type="button" class="tb-close" data-print-close>Ýap</button>
+    <p class="print-hint">
+      Bir çapda: ilki anketa, soň şertnama.
+      Ähli PC-de birmeňzeş: <strong>A4</strong>,
+      <strong>Masştab / Scale = 100%</strong>,
+      <strong>Margins = Default</strong>,
+      <strong>Колонтитулы / Headers</strong> öçüriň.
+      Çep 1,5 sm · Sag 1 sm.
+    </p>
+  </div>
+
+  <div id="packet">
+    <div class="sheet page packet-anketa" id="sheet">
+      <p class="loading">Anketa ýüklenýär...</p>
+    </div>
+    <div class="page packet-contract" id="contract-page">
+      <p class="loading">Şertnama ýüklenýär...</p>
+    </div>
+  </div>
+
+  <script src="/js/api.js?v=14"></script>
+  <script src="/js/print-nav.js?v=19"></script>
+  <script src="/js/anketa-print.js?v=32"></script>
+  <script src="/js/anketa-scan-view.js?v=7"></script>
+  <script src="/js/contract-print.js?v=16"></script>
+  <script src="/js/anketa-packet-print.js?v=7"></script>
+</body>
+</html>

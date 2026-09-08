@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="tk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Operator giriş — Kerwen</title>
+  <link rel="stylesheet" href="/css/style.css?v=109">
+  <script src="/js/fit-screen.js?v=3" defer></script>
+  <style>
+    .lan-page { max-width: 560px; margin: 48px auto; padding: 0 16px; }
+    .lan-page .card { background:#fff; border:1px solid #d7e0e8; border-radius:12px; padding:20px; margin:14px 0; }
+    .lan-page code, .lan-page .url { font-size:1.05rem; word-break:break-all; }
+    .lan-page .hint { color:#64748b; font-size:0.92rem; }
+    .big-btn { display:inline-block; margin-top:10px; background:#a6853d; color:#fff !important; text-decoration:none; padding:12px 18px; border-radius:10px; font-weight:700; }
+  </style>
+</head>
+<body>
+  <div class="lan-page">
+    <h1>Operator giriş (kamera)</h1>
+    <p class="hint"><b>KerwenKadr</b> DNS ýalňyşlygy bolsa — aşakdaky <b>IP</b> bilen giriň. Bu hemişe işleýär.</p>
+
+    <div class="card">
+      <h2 style="margin:0 0 8px;font-size:1.05rem">1) Şu IP bilen açyň</h2>
+      <p class="url" id="https-ip">…</p>
+      <a class="big-btn" id="btn-https" href="#">HTTPS bilen gir</a>
+      <p class="hint" style="margin-top:12px">Ilki gezek: Advanced → Proceed. Soň <a href="/admin/trust-https.html">sertifikaty ynamly ediň</a>.</p>
+    </div>
+
+    <div class="card">
+      <h2 style="margin:0 0 8px;font-size:1.05rem">2) At bilen (KerwenKadr)</h2>
+      <p class="hint">Diňe operator PC-de <code>hosts</code> gurlanda işleýär. USB: <code>certs\operator-pack\1-hosts-gur.bat</code></p>
+      <p class="url"><a href="https://KerwenKadr:8443/admin/login.html">https://KerwenKadr:8443/admin/login.html</a></p>
+    </div>
+
+    <p><a href="/admin/login.html">← Giriş (HTTP)</a></p>
+  </div>
+  <script>
+    (function () {
+      const host = location.hostname || '127.0.0.1';
+      const url = 'https://' + host + ':8443/admin/login.html';
+      const el = document.getElementById('https-ip');
+      const btn = document.getElementById('btn-https');
+      if (el) el.textContent = url;
+      if (btn) { btn.href = url; }
+    })();
+  </script>
+</body>
+</html>

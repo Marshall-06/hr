@@ -1,0 +1,10 @@
+=== OPERATORLAR (webcam + 8443) ===
+
+Main PC eyyam tayyar. Her OPERATOR PC-de BIR GEZEK:
+  1) 1-sertifikat-ynamly.bat  -> Run as administrator
+  2) Chrome/Edge-i doly yapyn
+  3) Softan hemishe:
+
+     https://192.168.2.10:8443/admin/login.html
+
+Webcam, anketa, ahli zat su IP:8443 bilen ishleyar.

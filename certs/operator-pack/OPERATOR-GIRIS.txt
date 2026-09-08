@@ -1,0 +1,15 @@
+OPERATORLAR - SERTIFIKAT GEREK DAL
+
+Main PC bir gezek tayyar (hemishelik IP + firewall).
+Operatorlar diňe brauzerde su IP-ni acyn:
+
+  http://192.168.2.10:8000/admin/login.html
+
+Login: ulanyjy ady + parol
+Surat: "Fayldan sayla"
+
+Webcam kamera gerek bolsa (islege):
+  https://192.168.2.10:8443/admin/login.html
+  + webcam-sertifikat-islege.bat (Admin, bir gezek)
+
+Adaty is uchin HTTP yeter - Advanced yok.
