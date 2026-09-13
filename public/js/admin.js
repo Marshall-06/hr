@@ -860,7 +860,7 @@ function renderAnketaRows(items) {
         <td class="col-actions">
           <div class="actions-cell actions-cell--compact">
             <button type="button" class="act-btn act-btn--accent" onclick="matchAnketa(${a.id})" title="${escHtml(tr('btn_vacancy', 'Wakansiýa'))}">Wakansiýa</button>
-            <a class="act-btn act-btn--soft" href="/admin/anketa-new.html?id=${a.id}&return=view" title="${escHtml(tr('btn_edit', 'Üýtget'))}">Üýtget</a>
+            <a class="act-btn act-btn--soft" href="/admin/anketa-new.html?id=${a.id}&return=dashboard" title="${escHtml(tr('btn_edit', 'Üýtget'))}">Üýtget</a>
             <button type="button" class="act-btn act-btn--print" onclick="printAnketa(${a.id})" title="${escHtml(tr('btn_anketa_only_print', 'Anketa çap'))}">Çap</button>
             <button type="button" class="act-btn ${a.status === 'Isleyar' ? 'act-btn--ok' : 'act-btn--warn'}" onclick="toggleAnketa(${a.id}, '${escHtml(a.status || 'Islanok')}')" title="${escHtml(a.status === 'Isleyar' ? tr('btn_open', 'Aç') : tr('btn_close', 'Ýap'))}">${a.status === 'Isleyar' ? tr('btn_open', 'Aç') : tr('btn_close', 'Ýap')}</button>
             <button type="button" class="act-btn act-btn--note" onclick="printContractOnly(${a.id})" title="${escHtml(tr('btn_contract_print', 'Şertnama çap'))}">Şertnama</button>
@@ -1352,7 +1352,7 @@ function vacancyTableRowHtml(v) {
         <td class="col-actions">
           <div class="actions-cell actions-cell--compact">
             <button type="button" class="act-btn act-btn--accent" onclick="closeModal(); matchVacancy(${v.id})" title="${escHtml(tr('dash_find_cand', 'Dalaşgär tap'))}">Dalaşgär</button>
-            <a class="act-btn act-btn--soft" href="/admin/vacancy-new.html?id=${v.id}&return=view" title="${escHtml(tr('btn_edit', 'Üýtget'))}">Üýtget</a>
+            <a class="act-btn act-btn--soft" href="/admin/vacancy-new.html?id=${v.id}&return=dashboard" title="${escHtml(tr('btn_edit', 'Üýtget'))}">Üýtget</a>
             <button type="button" class="act-btn act-btn--note" onclick="openEntityComments('vacancy', ${v.id})" title="${escHtml(tr('comments_title', 'Komentariýalar'))}">Bellik</button>
             <button type="button" class="act-btn ${v.status === 'Acyk' ? 'act-btn--warn' : 'act-btn--ok'}" onclick="toggleVacancy(${v.id}, '${v.status}')" title="${escHtml(v.status === 'Acyk' ? tr('btn_close', 'Ýap') : tr('btn_open', 'Aç'))}">${v.status === 'Acyk' ? tr('btn_close', 'Ýap') : tr('btn_open', 'Aç')}</button>
             ${canDelete() ? `<button type="button" class="act-btn act-btn--danger" onclick="deleteVacancy(${v.id})" title="${escHtml(tr('btn_delete', 'Poz'))}">Poz</button>` : ''}
@@ -3325,7 +3325,60 @@ const ASSIGNED_FILTER_FIELD_MAP = {
   position: 'assigned-filter-position',
   salary: 'assigned-filter-salary',
   vacancyNumber: 'assigned-filter-vacancy-number',
+  operator: 'assigned-filter-operator',
 };
+
+let _assignedOpsLoaded = false;
+async function loadAssignedOperatorFilter() {
+  const select = document.getElementById('assigned-filter-operator');
+  if (!select) return;
+  if (!isAdmin) {
+    select.classList.add('hidden');
+    select.value = '';
+    return;
+  }
+  select.classList.remove('hidden');
+  if (_assignedOpsLoaded && select.options.length > 1) return;
+
+  const prev = select.value;
+  try {
+    const res = await api.get('/auth/staff');
+    const staff = (res.data || []).filter((u) => u.role === 'operator');
+    const seen = new Set();
+    const options = [`<option value="">${tr('all_operators', 'Ähli operatorlar')}</option>`];
+
+    staff.forEach((u) => {
+      const name = String(u.fullName || u.username || '').trim();
+      if (!name || seen.has(`id:${u.id}`)) return;
+      seen.add(`id:${u.id}`);
+      seen.add(name.toLowerCase());
+      options.push(`<option value="u:${u.id}">${escHtml(forumOperatorOptionLabel(u))}</option>`);
+    });
+
+    try {
+      const byOp = await api.get('/vacancies/by-operator');
+      (byOp.data || []).forEach((row) => {
+        const name = String(row.forumOperator || '').trim();
+        if (!name || name === 'Bellenmedik') return;
+        if (seen.has(name.toLowerCase())) return;
+        if (row.acceptedByUserId && seen.has(`id:${row.acceptedByUserId}`)) return;
+        seen.add(name.toLowerCase());
+        options.push(`<option value="n:${escHtml(name)}">${escHtml(name)}</option>`);
+      });
+    } catch (_) { /* ignore */ }
+
+    select.innerHTML = options.join('');
+    if (prev && [...select.options].some((o) => o.value === prev)) {
+      select.value = prev;
+    } else {
+      select.value = '';
+    }
+    _assignedOpsLoaded = true;
+  } catch (_) {
+    select.innerHTML = `<option value="">${tr('all_operators', 'Ähli operatorlar')}</option>`;
+    select.value = '';
+  }
+}
 
 function resetAssignedFilters() {
   [
@@ -3343,8 +3396,10 @@ function resetAssignedFilters() {
   });
   const st = document.getElementById('assigned-status');
   const vs = document.getElementById('assigned-vacancy-status');
+  const op = document.getElementById('assigned-filter-operator');
   if (st) st.value = '';
   if (vs) vs.value = '';
+  if (op) op.value = '';
   try { sessionStorage.removeItem(ASSIGNED_FILTERS_KEY); } catch (_) { /* ignore */ }
   loadAssigned();
 }
@@ -3382,12 +3437,26 @@ function buildAssignedReturnUrl() {
 }
 
 async function loadAssigned() {
+  await loadAssignedOperatorFilter();
   saveAssignedFilterState();
   const params = new URLSearchParams({ limit: 100 });
   Object.entries(ASSIGNED_FILTER_FIELD_MAP).forEach(([key, id]) => {
+    if (key === 'operator') return;
     const val = document.getElementById(id)?.value?.trim();
     if (val) params.set(key, val);
   });
+
+  // Admin: operator filtri (default boş = ählisi)
+  if (isAdmin) {
+    const raw = String(document.getElementById('assigned-filter-operator')?.value || '').trim();
+    if (raw.startsWith('u:')) {
+      const uid = Number(raw.slice(2));
+      if (uid) params.set('acceptedByUserId', String(uid));
+    } else if (raw.startsWith('n:')) {
+      const name = raw.slice(2).trim();
+      if (name) params.set('forumOperator', name);
+    }
+  }
 
   const tbody = document.getElementById('assigned-tbody');
   if (!tbody) return;

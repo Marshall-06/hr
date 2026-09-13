@@ -1674,7 +1674,7 @@ document.getElementById('anketa-form').addEventListener('submit', async (e) => {
       clearDraft();
       showAlert(alertBox, `Anketa täzelendi! № ${res.data.anketaNumber || EDIT_ID}`, 'success');
       setTimeout(() => {
-        window.location.href = `/admin/anketa-view.html?id=${EDIT_ID}`;
+        window.location.href = '/admin/dashboard.html';
       }, 500);
       return;
     }

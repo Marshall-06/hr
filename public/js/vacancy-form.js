@@ -633,11 +633,14 @@ document.getElementById('vacancy-form')?.addEventListener('submit', async (e) =>
       const res = await api.put(`/vacancies/${EDIT_ID}`, data);
       vacId = res.data?.id || EDIT_ID;
       showAlert(alertBox, `Wakansiýa täzelendi! № ${res.data?.vacancyNumber || EDIT_ID}`, 'success');
-    } else {
-      const res = await api.post('/vacancies', data);
-      vacId = res.data?.id;
-      showAlert(alertBox, `Wakansiýa goşuldy! № ${res.data?.vacancyNumber || ''}`, 'success');
+      setTimeout(() => {
+        window.location.href = '/admin/dashboard.html';
+      }, 400);
+      return;
     }
+    const res = await api.post('/vacancies', data);
+    vacId = res.data?.id;
+    showAlert(alertBox, `Wakansiýa goşuldy! № ${res.data?.vacancyNumber || ''}`, 'success');
     setTimeout(() => {
       window.location.href = `/admin/vacancy-view.html?id=${vacId}`;
     }, 400);

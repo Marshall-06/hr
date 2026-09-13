@@ -322,19 +322,18 @@
     window.ANKETA_FROM_PANEL = true;
     window.ANKETA_EMBED = false;
     const _qp = new URLSearchParams(location.search);
-    window.ANKETA_RETURN_TAB = _qp.get('return') || 'anketas';
+    window.ANKETA_RETURN_TAB = _qp.get('return') || 'dashboard';
     window.ANKETA_EDIT_ID = _qp.get('id') || _qp.get('anketaId') || '';
     document.getElementById('btn-nav-back')?.addEventListener('click', (e) => {
       e.preventDefault();
-      if (window.EscNav?.goBack) EscNav.goBack();
-      else if (history.length > 1) history.back();
-      else location.href = '/admin/dashboard.html?tab=anketas';
+      // Üýtgetme / täze forma: Yza → hemişe Dolandyryş
+      location.href = '/admin/dashboard.html';
     });
     const _ab = document.getElementById('btn-nav-back');
     if (_ab) _ab.dataset.navBound = '1';
   </script>
   <script src="/js/anketa-photo.js?v=16"></script>
-  <script src="/js/anketa-form.js?v=48"></script>
+  <script src="/js/anketa-form.js?v=50"></script>
 </body>
 
 </html>

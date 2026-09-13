@@ -30,7 +30,7 @@ let cachedAnketa = null;
 
 const editEarly = document.getElementById('btn-edit-anketa');
 if (editEarly && id) {
-  editEarly.href = `/admin/anketa-new.html?id=${id}&return=view`;
+  editEarly.href = `/admin/anketa-new.html?id=${id}&return=dashboard`;
 }
 
 function parseNavIds() {
@@ -53,15 +53,8 @@ function formatAnketaPositionsDisplay(a) {
 }
 
 function navBack() {
-  if (window.EscNav?.goBack) {
-    EscNav.goBack();
-    return;
-  }
-  if (window.history.length > 1) {
-    window.history.back();
-    return;
-  }
-  window.location.href = '/admin/dashboard.html?tab=anketas';
+  // Görnüş / üýtgetme soň: Yza → Dolandyryş
+  window.location.href = '/admin/dashboard.html';
 }
 
 function assignmentStatusClass(status) {
@@ -426,7 +419,6 @@ async function openAnketaAssignHistory() {
     const a = anketa || cachedAnketa || {};
     const faa = fullName(a) || 'Dalaşgär';
     const num = a.anketaNumber || '—';
-    const vacOfferId = Number(vacancyIdForOffer) || 0;
     const lv = latest?.vacancy || {};
     const latestDay = latest
       ? (latest.acceptedAt || latest.updatedAt || latest.createdAt)
@@ -501,20 +493,13 @@ async function openAnketaAssignHistory() {
 
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
         <button type="button" class="btn btn-ghost" id="btn-assign-cancel">Ýap</button>
-        ${vacOfferId
-          ? `<button type="button" class="btn btn-success" id="btn-assign-new-offer">Täze hödürle</button>`
-          : `<button type="button" class="btn btn-accent" id="btn-assign-go-match">Wakansiýa saýla / hödürle</button>`}
+        <button type="button" class="btn btn-success" id="btn-assign-pick-vac">Wakansiýa saýla / hödürle</button>
       </div>
     `);
 
     document.getElementById('btn-assign-cancel').onclick = () => closeAssignModal();
-    document.getElementById('btn-assign-new-offer')?.addEventListener('click', () => {
-      closeAssignModal();
-      openAssignOffer();
-    });
-    document.getElementById('btn-assign-go-match')?.addEventListener('click', () => {
-      closeAssignModal();
-      window.location.href = `/admin/dashboard.html?tab=match&anketaId=${anketaId}`;
+    document.getElementById('btn-assign-pick-vac')?.addEventListener('click', () => {
+      openAssignVacancyPicker();
     });
 
     document.querySelectorAll('#assign-offer-body select[data-assign-id]').forEach((el) => {
@@ -533,11 +518,202 @@ async function openAnketaAssignHistory() {
   }
 }
 
-async function openAssignOffer() {
+function vacLabel(v) {
+  const num = v.vacancyNumber ? `№${v.vacancyNumber}` : `#${v.id}`;
+  const pos = v.position || 'Wezipe';
+  const sal = v.salary ? ` · ${v.salary}` : '';
+  return `${num} — ${pos}${sal}`;
+}
+
+function companyNamesFromVacancies(list) {
+  const set = new Set();
+  (list || []).forEach((v) => {
+    const c = String(v.companyName || '').trim() || '—';
+    set.add(c);
+  });
+  return [...set].sort((a, b) => a.localeCompare(b, 'tk'));
+}
+
+async function loadOpenVacanciesForAssign(preferredVacId) {
+  let items = [];
+  try {
+    const res = await api.get('/vacancies?status=Acyk&limit=500');
+    items = res.data?.items || res.data || [];
+    if (!Array.isArray(items)) items = [];
+  } catch {
+    items = [];
+  }
+  const prefId = Number(preferredVacId) || 0;
+  if (prefId && !items.some((v) => Number(v.id) === prefId)) {
+    try {
+      const one = await api.get(`/vacancies/${prefId}`);
+      if (one.data) items.unshift(one.data);
+    } catch { /* ignore */ }
+  }
+  return items;
+}
+
+/** Anketa içinden — açyk wakansiýany şol ýerde saýla */
+async function openAssignVacancyPicker() {
   const anketaId = Number(id);
-  const vacId = Number(vacancyIdForOffer);
-  if (!anketaId || !vacId) {
-    showAlert(document.getElementById('alert-box'), 'Wakansiýa saýlanmady — hödürläp bolmaz', 'error');
+  if (!anketaId) {
+    showAlert(document.getElementById('alert-box'), 'Anketa ID ýok', 'error');
+    return;
+  }
+  const a = cachedAnketa || {};
+  const faa = fullName(a) || 'Dalaşgär';
+  const num = a.anketaNumber || '—';
+  const prefId = Number(vacancyIdForOffer) || 0;
+
+  showAssignModal(`
+    <h3 style="margin-top:0">Wakansiýa saýla</h3>
+    <p class="muted" style="margin:0 0 12px">
+      <strong>${esc(faa)}</strong> · № ${esc(num)} — haýsy açyk wezipä hödürlemeli?
+    </p>
+    <div class="form-group" style="margin-bottom:10px">
+      <label for="assign-pick-search">Gözleg</label>
+      <input type="text" id="assign-pick-search" placeholder="Firma / wezipe / №" style="width:100%">
+    </div>
+    <div class="form-group" style="margin-bottom:10px">
+      <label for="assign-pick-company">Firma</label>
+      <select id="assign-pick-company" style="width:100%">
+        <option value="">Ýüklenýär...</option>
+      </select>
+    </div>
+    <div class="form-group" style="margin-bottom:10px">
+      <label for="assign-pick-vacancy">Wakansiýa *</label>
+      <select id="assign-pick-vacancy" style="width:100%">
+        <option value="">Ýüklenýär...</option>
+      </select>
+    </div>
+    <p id="assign-pick-hint" class="muted" style="margin:0 0 12px;font-size:12px"></p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
+      <button type="button" class="btn btn-ghost" id="btn-assign-pick-back">Yza</button>
+      <button type="button" class="btn btn-ghost" id="btn-assign-pick-cancel">Ýatyr</button>
+      <button type="button" class="btn btn-accent" id="btn-assign-pick-next" disabled>Dowam et</button>
+    </div>
+  `);
+
+  const companySel = document.getElementById('assign-pick-company');
+  const vacSel = document.getElementById('assign-pick-vacancy');
+  const searchEl = document.getElementById('assign-pick-search');
+  const hintEl = document.getElementById('assign-pick-hint');
+  const nextBtn = document.getElementById('btn-assign-pick-next');
+
+  document.getElementById('btn-assign-pick-cancel').onclick = () => closeAssignModal();
+  document.getElementById('btn-assign-pick-back').onclick = () => openAnketaAssignHistory();
+
+  let allVacs = [];
+  try {
+    allVacs = await loadOpenVacanciesForAssign(prefId);
+  } catch (e) {
+    showAlert(document.getElementById('alert-box'), e.message || 'Wakansiýalar ýüklenmedi', 'error');
+    return;
+  }
+
+  if (!allVacs.length) {
+    companySel.innerHTML = '<option value="">—</option>';
+    vacSel.innerHTML = '<option value="">Açyk wakansiýa ýok</option>';
+    if (hintEl) hintEl.textContent = 'Ilki Wakansiýalar sekmesinde açyk wezipe goşuň.';
+    return;
+  }
+
+  function filteredList() {
+    const q = String(searchEl?.value || '').trim().toLowerCase();
+    const company = String(companySel?.value || '').trim();
+    return allVacs.filter((v) => {
+      const co = String(v.companyName || '').trim() || '—';
+      if (company && company !== '__all__' && co !== company) return false;
+      if (!q) return true;
+      const hay = [
+        v.companyName, v.position, v.vacancyNumber, v.salary, String(v.id),
+      ].map((x) => String(x || '').toLowerCase()).join(' ');
+      return hay.includes(q);
+    });
+  }
+
+  function refillCompanies() {
+    const names = companyNamesFromVacancies(allVacs);
+    const prev = companySel.value;
+    companySel.innerHTML = [
+      '<option value="__all__">Ähli firmalar</option>',
+      ...names.map((n) => `<option value="${esc(n)}">${esc(n)}</option>`),
+    ].join('');
+    if (prev && [...companySel.options].some((o) => o.value === prev)) {
+      companySel.value = prev;
+    } else if (prefId) {
+      const pref = allVacs.find((v) => Number(v.id) === prefId);
+      const co = pref ? (String(pref.companyName || '').trim() || '—') : '__all__';
+      companySel.value = [...companySel.options].some((o) => o.value === co) ? co : '__all__';
+    } else {
+      companySel.value = '__all__';
+    }
+  }
+
+  function refillVacancies() {
+    const list = filteredList();
+    const prev = vacSel.value;
+    vacSel.innerHTML = [
+      '<option value="">— Wakansiýa saýlaň —</option>',
+      ...list.map((v) => {
+        const co = String(v.companyName || '').trim() || '—';
+        const showCo = companySel.value === '__all__';
+        const label = showCo ? `${co} · ${vacLabel(v)}` : vacLabel(v);
+        return `<option value="${v.id}">${esc(label)}</option>`;
+      }),
+    ].join('');
+    if (prev && [...vacSel.options].some((o) => o.value === prev)) {
+      vacSel.value = prev;
+    } else if (prefId && [...vacSel.options].some((o) => o.value === String(prefId))) {
+      vacSel.value = String(prefId);
+    } else if (list.length === 1) {
+      vacSel.value = String(list[0].id);
+    }
+    onVacChange();
+  }
+
+  function onVacChange() {
+    const vid = Number(vacSel.value) || 0;
+    nextBtn.disabled = !(vid > 0);
+    const v = allVacs.find((x) => Number(x.id) === vid);
+    if (hintEl) {
+      hintEl.textContent = v
+        ? `${v.companyName || '—'} · ${v.position || '—'}${v.salary ? ` · ${v.salary}` : ''} · açyk`
+        : `${filteredList().length} wakansiýa`;
+    }
+  }
+
+  refillCompanies();
+  refillVacancies();
+
+  companySel.onchange = () => refillVacancies();
+  vacSel.onchange = () => onVacChange();
+  let searchTimer = null;
+  searchEl?.addEventListener('input', () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => refillVacancies(), 180);
+  });
+
+  nextBtn.onclick = () => {
+    const vid = Number(vacSel.value) || 0;
+    if (!vid) {
+      showAlert(document.getElementById('alert-box'), 'Wakansiýa saýlaň', 'error');
+      return;
+    }
+    vacancyIdForOffer = vid;
+    openAssignOffer(vid);
+  };
+}
+
+async function openAssignOffer(vacIdOverride) {
+  const anketaId = Number(id);
+  const vacId = Number(vacIdOverride) || Number(vacancyIdForOffer);
+  if (!anketaId) {
+    showAlert(document.getElementById('alert-box'), 'Anketa ID ýok', 'error');
+    return;
+  }
+  if (!vacId) {
+    openAssignVacancyPicker();
     return;
   }
   try {
@@ -550,6 +726,7 @@ async function openAssignOffer() {
     const v = vRes.data;
     const a = aRes.data;
     cachedAnketa = a;
+    vacancyIdForOffer = vacId;
     const ankCounts = cRes.data?.[anketaId] || { total: 0, active: 0 };
     if (!a.anketaNumber) {
       showAlert(document.getElementById('alert-box'), 'Anketa belgesi (№) ýok — hödürläp bolmaz', 'error');
@@ -577,6 +754,7 @@ async function openAssignOffer() {
           <small>WAKANSIÝA</small>
           <strong>${esc(company)}</strong>
           <p>${esc(position)}${v.salary ? ` · ${esc(v.salary)}` : ''}</p>
+          <p class="muted" style="margin:6px 0 0;font-size:12px">№${esc(v.vacancyNumber || v.id)}</p>
         </div>
       </div>
       ${Number(ankCounts.active) > 0 ? `
@@ -598,6 +776,7 @@ async function openAssignOffer() {
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
         <button type="button" class="btn btn-ghost" id="btn-assign-cancel">Ýatyr</button>
+        <button type="button" class="btn btn-ghost" id="btn-assign-change-vac">Başga wakansiýa</button>
         <button type="button" class="btn btn-ghost" id="btn-assign-history">Taryh</button>
         <button type="button" class="btn btn-accent" id="btn-assign-confirm">
           Hödürle (№ ${esc(a.anketaNumber)})
@@ -612,6 +791,7 @@ async function openAssignOffer() {
       };
     }
     document.getElementById('btn-assign-cancel').onclick = () => closeAssignModal();
+    document.getElementById('btn-assign-change-vac').onclick = () => openAssignVacancyPicker();
     document.getElementById('btn-assign-history').onclick = () => openAnketaAssignHistory();
     document.getElementById('btn-assign-confirm').onclick = () => confirmAssignOffer(vacId, anketaId);
   } catch (err) {
@@ -1022,7 +1202,7 @@ async function load() {
     document.title = `Anketa № ${a.anketaNumber || id}`;
 
     const editBtn = document.getElementById('btn-edit-anketa');
-    if (editBtn) editBtn.href = `/admin/anketa-new.html?id=${a.id}&return=view`;
+    if (editBtn) editBtn.href = `/admin/anketa-new.html?id=${a.id}&return=dashboard`;
 
     const statusBtn = document.getElementById('btn-anketa-toggle-status');
     if (statusBtn) {

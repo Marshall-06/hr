@@ -61,7 +61,7 @@ function renderContractPrintHtml(d) {
         <li><span class="num">3.1.2.</span>Iş berijileriň talaplaryna laýyklykda Iş gözleýijiniň anketa maglumatlaryny olara bermäge;</li>
         <li><span class="num">3.1.3.</span>Iş berijilerden başga üçünji tarapa Iş gözleýijiniň anketa maglumatlaryny aýan etmezlige;</li>
         <li><span class="num">3.1.4.</span>Iş gözleýijini bar bolan boş iş orunlary bilen habarly etmäge;</li>
-        <li><span class="num">3.1.5.</span>Iş gözleýijini potensial Iş berijiler bilen iş söhbetdeşligini geçirmek üçin düşürmäge.</li>
+        <li><span class="num">3.1.5.</span>Iş gözleýijini potensial Iş berijiler bilen iş söhbetdeşligini geçirmek üçin duşurmaga.</li>
       </ol>
 
       <p class="p numbered"><span class="num">3.2.</span>
@@ -81,7 +81,7 @@ function renderContractPrintHtml(d) {
         <li><span class="num">3.3.2.</span>Potensial iş berijiniň iş söhbetdeşligine wagtynda barmaga;</li>
         <li><span class="num">3.3.3.</span>Söhbetdeşligiň netijesinde işe ýerleşendigi ýa-da ýerleşmändigi barada habar bermäge;</li>
         <li><span class="num">3.3.4.</span>Işe ýerleşen ýagdaýynda 3 günüň dowamynda gelip şu şertnama goşunda gol çekmäge;</li>
-        <li><span class="num">3.3.5.</span>Işe ýerleşen ýagdaýynda şu şertnamanyň 4.1. bendine laýyklykda Ýerine ýetirije ýerine ýetirilen hyzmatyň tölegini tölemäge.</li>
+        <li><span class="num">3.3.5.</span>Işe ýerleşen ýagdaýynda şu şertnamanyň 4.1. bendine laýyklykda Ýerine ýetirijä ýerine ýetirilen hyzmatyň tölegini tölemäge.</li>
       </ol>
 
       <p class="p numbered"><span class="num">3.4.</span>

@@ -871,6 +871,16 @@ class VacancyService {
     const vacancyWhere = {};
     if (currentUser?.role === 'operator' && currentUser.id) {
       vacancyWhere.acceptedByUserId = currentUser.id;
+    } else if (currentUser?.role === 'admin') {
+      // Admin: default ählisi; islese operatora görä süz
+      // Möhüm: diňe adatý string açarlar — Op.or Symbol Object.keys-de görünmeýär
+      if (query.acceptedByUserId) {
+        const uid = parseInt(query.acceptedByUserId, 10);
+        if (uid) vacancyWhere.acceptedByUserId = uid;
+      } else if (query.forumOperator) {
+        const name = String(query.forumOperator).trim();
+        if (name) vacancyWhere.forumOperator = { [Op.iLike]: name };
+      }
     }
     if (query.vacancyStatus) vacancyWhere.status = query.vacancyStatus;
     if (query.company || query.companyName) {
@@ -934,6 +944,10 @@ class VacancyService {
     const assignmentWhere = and.length ? { [Op.and]: and } : {};
     const needAnketaJoin = !!(faa || search || Object.keys(anketaWhere).length);
     const needVacancyJoin = !!(search || Object.keys(vacancyWhere).length);
+    const vacancyRequired = !!(
+      (currentUser?.role === 'operator' && currentUser.id)
+      || Object.keys(vacancyWhere).length
+    );
 
     const { rows, count } = await VacancyAssignment.findAndCountAll({
       where: assignmentWhere,
@@ -963,7 +977,7 @@ class VacancyService {
             required: false,
           }],
           where: Object.keys(vacancyWhere).length ? vacancyWhere : undefined,
-          required: !!(currentUser?.role === 'operator' && currentUser.id),
+          required: vacancyRequired,
         },
       ],
       order: [['updatedAt', 'DESC'], ['id', 'DESC']],

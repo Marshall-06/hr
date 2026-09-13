@@ -4,7 +4,7 @@ const params = new URLSearchParams(window.location.search);
 const id = params.get('id');
 const editEarly = document.getElementById('btn-edit-vacancy');
 if (editEarly && id) {
-  editEarly.href = `/admin/vacancy-new.html?id=${id}&return=view`;
+  editEarly.href = `/admin/vacancy-new.html?id=${id}&return=dashboard`;
 }
 
 const VACANCY_LANGS = ['Türkmen', 'Rus', 'Iňlis', 'Türk', 'Pars', 'Özbek'];
@@ -14,15 +14,8 @@ const VACANCY_PROGS = [
 ];
 
 function navBack() {
-  if (window.EscNav?.goBack) {
-    EscNav.goBack();
-    return;
-  }
-  if (history.length > 1) {
-    history.back();
-    return;
-  }
-  location.href = '/admin/dashboard.html?tab=vacancies';
+  // Görnüş / üýtgetme soň: Yza → Dolandyryş
+  location.href = '/admin/dashboard.html';
 }
 
 document.getElementById('btn-nav-back')?.addEventListener('click', (e) => {
@@ -162,7 +155,7 @@ async function load() {
     document.title = `Wakansiýa ${numLabel}${dateLabel ? ` · ${dateLabel}` : ''} — ${(typeof agencyBrandFull === 'function' && agencyBrandFull()) || 'Kerwen Agenstwa'}`;
 
     const editBtn = document.getElementById('btn-edit-vacancy');
-    if (editBtn) editBtn.href = `/admin/vacancy-new.html?id=${v.id}&return=view`;
+    if (editBtn) editBtn.href = `/admin/vacancy-new.html?id=${v.id}&return=dashboard`;
 
     document.getElementById('btn-match-vacancy').onclick = () => {
       window.location.href = `/admin/dashboard.html?tab=match&vacancyId=${v.id}`;
@@ -213,7 +206,7 @@ async function load() {
           </div>
 
           <div class="toolbar" style="margin-top:16px;gap:8px;flex-wrap:wrap">
-            <a class="btn btn-accent" href="/admin/vacancy-new.html?id=${v.id}&return=view">Üýtget</a>
+            <a class="btn btn-accent" href="/admin/vacancy-new.html?id=${v.id}&return=dashboard">Üýtget</a>
             <button type="button" class="btn btn-ghost" id="btn-match-inline">Dalaşgär tap</button>
           </div>
         </div>

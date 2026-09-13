@@ -185,18 +185,11 @@
   <script>
     if (!requireAuth()) throw new Error('Auth required');
     const _qp = new URLSearchParams(location.search);
-    window.VACANCY_RETURN_TAB = _qp.get('return') || 'vacancies';
+    window.VACANCY_RETURN_TAB = _qp.get('return') || 'dashboard';
     window.VACANCY_EDIT_ID = _qp.get('id') || '';
     function vacGoBack() {
-      if (window.EscNav?.goBack) {
-        EscNav.goBack();
-        return;
-      }
-      if (history.length > 1) {
-        history.back();
-        return;
-      }
-      location.href = '/admin/dashboard.html?tab=vacancies';
+      // Üýtgetme / täze forma: Yza → hemişe Dolandyryş
+      location.href = '/admin/dashboard.html';
     }
     document.getElementById('btn-nav-back')?.addEventListener('click', (e) => {
       e.preventDefault();
@@ -209,7 +202,7 @@
     const _vb = document.getElementById('btn-nav-back');
     if (_vb) _vb.dataset.navBound = '1';
   </script>
-  <script src="/js/vacancy-form.js?v=15"></script>
+  <script src="/js/vacancy-form.js?v=17"></script>
 </body>
 
 </html>

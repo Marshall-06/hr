@@ -83,11 +83,11 @@ function compareAnketaNumber(a, b) {
   return String(a || '').localeCompare(String(b || ''), 'tk');
 }
 
-/** Tölegler tablisasy — soňky kabul edilenler ýokarda (täze → köne) */
+/** Tölegler tablisasy — işe başlan senesi boýunça täze → köne */
 function compareByAcceptedRecent(a, b) {
-  const ta = Date.parse(String(a.acceptedSortAt || a.acceptedAt || a.workStartDate || '')) || 0;
-  const tb = Date.parse(String(b.acceptedSortAt || b.acceptedAt || b.workStartDate || '')) || 0;
-  if (ta !== tb) return tb - ta;
+  const dayA = String(a.workStartDate || a.acceptedAt || a.employmentDate || a.acceptedSortAt || '').slice(0, 10);
+  const dayB = String(b.workStartDate || b.acceptedAt || b.employmentDate || b.acceptedSortAt || '').slice(0, 10);
+  if (dayA !== dayB) return dayB.localeCompare(dayA); // täze ýokarda
   const ida = Number(a.anketaId) || 0;
   const idb = Number(b.anketaId) || 0;
   if (ida !== idb) return idb - ida;
@@ -415,7 +415,7 @@ class FeePaymentService {
       employmentDate: workStartDate,
       workStartDate,
       acceptedAt: acceptedDay,
-      acceptedSortAt: placement?.acceptedSortAt || acceptedDay,
+      acceptedSortAt: acceptedDay || placement?.acceptedSortAt || null,
       workStatus,
       assignmentStatus: placement?.assignmentStatus || null,
       assignmentId: placement?.assignmentId || null,
@@ -609,11 +609,14 @@ class FeePaymentService {
         : (leftJobRow ? ASSIGNMENT_STATUS.LEFT_JOB : placement.status);
 
       const sortSource = acceptedNow || leftJobRow || placement;
-      const acceptedSortAt = sortSource?.updatedAt
-        ? new Date(sortSource.updatedAt).toISOString()
-        : (this.isoDay(sortSource?.acceptedAt) || null);
-
       const salarySource = working ? acceptedNow : (leftJobRow || placement);
+      // Tertip: işe başlan senesi (acceptedAt). updatedAt däl — «Işden çykdy» ýokara galmaz
+      const acceptedSortAt = this.isoDay(salarySource?.acceptedAt)
+        || this.isoDay(sortSource?.acceptedAt)
+        || this.isoDay(acceptedNow?.acceptedAt)
+        || this.isoDay(leftJobRow?.acceptedAt)
+        || this.isoDay(placement?.acceptedAt)
+        || null;
       const vacancySalary = salarySource?.vacancy?.salary
         || leftJobRow?.vacancy?.salary
         || acceptedNow?.vacancy?.salary

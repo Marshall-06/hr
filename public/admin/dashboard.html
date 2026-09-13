@@ -366,6 +366,10 @@
               <option value="Acyk" data-i18n="vac_open">Açyk wakansiýa</option>
               <option value="Yapyk" data-i18n="vac_closed">Ýapyk wakansiýa</option>
             </select>
+            <select id="assigned-filter-operator" class="admin-only hidden" onchange="loadAssigned()"
+              title="Forum operator" data-i18n-title="th_forum_op">
+              <option value="" data-i18n="all_operators">Ähli operatorlar</option>
+            </select>
             <input type="text" id="assigned-search" data-i18n-placeholder="ph_search" placeholder="Umumy gözleg..."
               style="min-width:150px;max-width:220px">
           </div>
@@ -840,7 +844,7 @@
   <script src="/js/api.js?v=14"></script>
   <script src="/js/option-lists.js?v=8"></script>
   <script src="/js/comments.js?v=2"></script>
-  <script src="/js/admin.js?v=304"></script>
+  <script src="/js/admin.js?v=306"></script>
   <script>
     initTkDatePickers();
     if (window.I18n) I18n.applyI18n();
