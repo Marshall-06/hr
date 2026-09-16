@@ -33,5 +33,5 @@ Get-ChildItem -Path $env:LOCALAPPDATA -Directory -ErrorAction SilentlyContinue |
 $exe = @($cands | Where-Object { $_ -and (Test-Path -LiteralPath $_) } | Select-Object -First 1)
 if (-not $exe) { exit 1 }
 
-Start-Process -FilePath $exe -ArgumentList '--autostart','--silent' -WorkingDirectory (Split-Path $exe)
+Start-Process -FilePath $exe -ArgumentList '--autostart','--silent' -WorkingDirectory (Split-Path $exe) -WindowStyle Hidden
 exit 0

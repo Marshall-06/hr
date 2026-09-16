@@ -350,6 +350,12 @@ function writeDashboardHistory(tab, { replace = false } = {}) {
   } catch { /* ignore */ }
 }
 
+function clearStickyMatchVacancy() {
+  matchMailContext = { vacancyId: null, email: '', name: '', company: '', position: '' };
+  pendingMatchVacancyId = null;
+  try { sessionStorage.removeItem(LAST_MATCH_VACANCY_KEY); } catch (_) { /* ignore */ }
+}
+
 function switchTab(tab, el, opts = {}) {
   const adminTabs = ['fees', 'reports', 'excel', 'users', 'settings'];
   if (adminTabs.includes(tab) && !isAdmin) {
@@ -359,6 +365,14 @@ function switchTab(tab, el, opts = {}) {
 
   const prevTab = currentDashboardTab;
   currentDashboardTab = tab;
+
+  // Match/hödürlenen tabdan çykylanda öňki wakansiýa «ýelmeşmesini» aýyr —
+  // ähli anketalarda ýalňyş hödürlemäniň öňüni alýar
+  if (prevTab === 'match' || prevTab === 'assigned') {
+    if (tab !== 'match' && tab !== 'assigned') {
+      clearStickyMatchVacancy();
+    }
+  }
 
   document.querySelectorAll('.sidebar a').forEach((a) => a.classList.remove('active'));
   const link = el || document.querySelector(`.sidebar a[data-tab="${tab}"]`);
@@ -880,11 +894,6 @@ function openAnketaPage(id, ids, vacancyId) {
   q.set('id', String(id));
   if (list.length) q.set('ids', [...new Set(list)].join(','));
 
-  const vacFromMatch = matchMailContext?.vacancyId || pendingMatchVacancyId
-    || document.getElementById('match-vacancy')?.value
-    || recalledMatchVacancy();
-  const explicitVacId = Number(vacancyId) || 0;
-  const vacId = explicitVacId || Number(vacFromMatch) || null;
   const onMatch = document.getElementById('tab-match')
     && !document.getElementById('tab-match').classList.contains('hidden');
   const onAssigned = document.getElementById('tab-assigned')
@@ -892,7 +901,18 @@ function openAnketaPage(id, ids, vacancyId) {
   const onVacancies = document.getElementById('tab-vacancies')
     && !document.getElementById('tab-vacancies').classList.contains('hidden');
 
-  // Anketa içinden hem hödürläp bolar ýaly
+  // Diňe anyk berlen ýa-da häzirki Match/Hödürlenen tabdaky wakansiýa —
+  // öňki recalled vacancy ähli anketalara «ýelmeşmesin» (ýalňyş hödürleme).
+  const explicitVacId = Number(vacancyId) || 0;
+  let vacId = explicitVacId || null;
+  if (!vacId && (onMatch || onAssigned)) {
+    const fromMatch = matchMailContext?.vacancyId
+      || pendingMatchVacancyId
+      || document.getElementById('match-vacancy')?.value
+      || null;
+    vacId = Number(fromMatch) || null;
+  }
+
   if (vacId) q.set('vacancyId', String(vacId));
 
   // Deňeşdirme / hödürlenenler — programma formaty (bazadan №), skan däl
@@ -906,9 +926,9 @@ function openAnketaPage(id, ids, vacancyId) {
     q.set('return', `/admin/dashboard.html?tab=match&vacancyId=${vacId}`);
   } else if (onAssigned) {
     q.set('return', buildAssignedReturnUrl());
-  } else if (onMatch && vacFromMatch) {
-    rememberMatchVacancy(vacFromMatch);
-    q.set('return', `/admin/dashboard.html?tab=match&vacancyId=${vacFromMatch}`);
+  } else if (onMatch && vacId) {
+    rememberMatchVacancy(vacId);
+    q.set('return', `/admin/dashboard.html?tab=match&vacancyId=${vacId}`);
   } else if (explicitVacId > 0 && (onVacancies || !onMatch)) {
     // Wakansiýa → hödürlenenler sanawyndan açyldy: yza gaýdanda şol sanaw açylsyn
     q.set('return', `/admin/dashboard.html?tab=vacancies&openAssignments=${explicitVacId}`);
@@ -2153,7 +2173,11 @@ async function loadMatchForVacancy(vacancyId) {
                 <td class="match-why" title="${escHtml(why)}">${escHtml(why)}</td>
                 <td class="td-active-assign">${anketaActiveAssignCellHtml(m.anketa.id, c.active, c.total)}</td>
                 <td>
-                  <button class="btn btn-sm btn-success" onclick="assignMatch(${vacancy.id}, ${m.anketa.id})" title="${escHtml(tr('btn_offer', 'Hödürle'))}">${tr('btn_offer', 'Hödürle')}</button>
+                  <button class="btn btn-sm btn-success btn-assign-match"
+                    type="button"
+                    data-vacancy-id="${Number(vacancy.id)}"
+                    data-anketa-id="${Number(m.anketa.id)}"
+                    title="${escHtml(tr('btn_offer', 'Hödürle'))}">${tr('btn_offer', 'Hödürle')}</button>
                 </td>
               </tr>`;
     }).join('')}
@@ -2164,6 +2188,7 @@ async function loadMatchForVacancy(vacancyId) {
     `;
     bindMatchResultsScroll(box);
     bindMatchMailButton(box);
+    bindMatchAssignButtons(box);
     syncMatchStatusToggleBtn();
   } catch (e) {
     await cardPromise.catch(() => null);
@@ -2184,6 +2209,28 @@ function bindMatchMailButton(box) {
       showAlert(document.getElementById('alert-box'), err.message || 'E-poçta açylmady', 'error');
     }
   });
+}
+
+/** Hödürle — data-anketa-id / data-vacancy-id (ähli setirler üçin dogry ID) */
+function bindMatchAssignButtons(box) {
+  if (!box || box.dataset.assignBound === '1') {
+    // täze HTML ýazylanda gaýtadan bagla
+    if (box) box.dataset.assignBound = '';
+  }
+  box.querySelectorAll('.btn-assign-match').forEach((btn) => {
+    btn.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const vacId = Number(btn.getAttribute('data-vacancy-id'));
+      const ankId = Number(btn.getAttribute('data-anketa-id'));
+      if (!vacId || !ankId) {
+        showAlert(document.getElementById('alert-box'), 'Wakansiýa ýa-da anketa saýlanmady', 'error');
+        return;
+      }
+      assignMatch(vacId, ankId);
+    };
+  });
+  box.dataset.assignBound = '1';
 }
 
 /** Tablisa aýratyn scroll — başlyk (.match-results-sticky) ýokarda galýar */
@@ -2743,8 +2790,12 @@ async function loadMatchForAnketa(anketaId) {
         ? tr('vac_open_short', 'Açyk')
         : (st === 'Yapyk' ? tr('vac_closed_short', 'Ýapyk') : (st || '—'));
       const stBadge = `<span class="badge ${isOpen ? 'badge-success' : 'badge-muted'}">${escHtml(stLabel)}</span>`;
-      const offerBtn = isOpen
-        ? `<button class="btn btn-sm btn-success" onclick="assignMatch(${m.vacancy.id}, ${anketa.id})" title="${escHtml(tr('btn_offer', 'Hödürle'))}">${tr('btn_offer', 'Hödürle')}</button>`
+      const offerAnketaId = Number(anketa?.id || anketaId);
+      const offerBtn = isOpen && offerAnketaId && m.vacancy?.id
+        ? `<button class="btn btn-sm btn-success btn-assign-match" type="button"
+            data-vacancy-id="${Number(m.vacancy.id)}"
+            data-anketa-id="${offerAnketaId}"
+            title="${escHtml(tr('btn_offer', 'Hödürle'))}">${tr('btn_offer', 'Hödürle')}</button>`
         : '';
       return `
               <tr class="match-row match-row--${escHtml(m.matchTier || 'skills')}">
@@ -2790,6 +2841,7 @@ async function loadMatchForAnketa(anketaId) {
       ${renderSection(tr('match_vac_position', 'Wezipe gabat wakansiýalar'), posList)}
       ${renderSection(tr('match_vac_skills', 'Programma / dil boýunça'), skillList)}
     `;
+    bindMatchAssignButtons(box);
   } catch (e) {
     if (box) box.innerHTML = `<p class="err">${escHtml(e.message || 'Ýalňyşlyk')}</p>`;
     showAlert(document.getElementById('alert-box'), e.message, 'error');
@@ -2814,15 +2866,25 @@ async function previewVacancyForCall(vacancyId) {
 }
 
 async function assignMatch(vacancyId, anketaId) {
+  const vacId = Number(vacancyId);
+  const aId = Number(anketaId);
+  if (!vacId || !aId) {
+    showAlert(document.getElementById('alert-box'), 'Wakansiýa ýa-da anketa saýlanmady', 'error');
+    return;
+  }
   try {
     const [vRes, aRes, cRes] = await Promise.all([
-      api.get(`/vacancies/${vacancyId}`),
-      api.get(`/anketas/${anketaId}`),
-      api.get(`/vacancies/assignments/anketa-counts?ids=${anketaId}`).catch(() => ({ data: {} })),
+      api.get(`/vacancies/${vacId}`),
+      api.get(`/anketas/${aId}`),
+      api.get(`/vacancies/assignments/anketa-counts?ids=${aId}`).catch(() => ({ data: {} })),
     ]);
     const v = vRes.data;
     const a = aRes.data;
-    const ankCounts = cRes.data?.[anketaId] || { total: 0, active: 0 };
+    if (Number(a?.id) !== aId) {
+      showAlert(document.getElementById('alert-box'), 'Anketa maglumaty gabat gelenok — Ctrl+F5', 'error');
+      return;
+    }
+    const ankCounts = cRes.data?.[aId] || cRes.data?.[String(aId)] || { total: 0, active: 0 };
     if (!a.anketaNumber) {
       showAlert(document.getElementById('alert-box'), 'Anketa belgesi (№) ýok — hödürläp bolmaz', 'error');
       return;
@@ -2842,7 +2904,7 @@ async function assignMatch(vacancyId, anketaId) {
           <p>${escHtml(formatAnketaPositionsDisplay(a))}</p>
           ${Number(ankCounts.active) > 0 ? `
             <p style="margin-top:10px">
-              ${anketaActiveAssignBtnHtml(anketaId, ankCounts.active, ankCounts.total)}
+              ${anketaActiveAssignBtnHtml(aId, ankCounts.active, ankCounts.total)}
             </p>` : ''}
         </div>
         <div class="assign-arrow">→</div>
@@ -2874,7 +2936,7 @@ async function assignMatch(vacancyId, anketaId) {
         <label>${tr('comments_note', 'Komentariýa / bellik')}</label>
         <textarea id="assign-notes" rows="3" placeholder="${escHtml(tr('comments_placeholder', 'Mysal: jaň edildi, ertir geler'))}"></textarea>
       </div>
-      <button class="btn btn-accent" type="button" onclick="confirmAssign(${vacancyId}, ${anketaId})">
+      <button class="btn btn-accent" type="button" onclick="confirmAssign(${vacId}, ${aId})">
         ${tr('btn_offer', 'Hödürle')} (№ ${escHtml(a.anketaNumber)})
       </button>
     `);
@@ -2883,20 +2945,44 @@ async function assignMatch(vacancyId, anketaId) {
   }
 }
 
+let assignConfirmBusy = false;
+
 async function confirmAssign(vacancyId, anketaId) {
+  if (assignConfirmBusy) return;
   const assignmentStatus = document.getElementById('assign-status')?.value || 'Hödürlendi';
   const notes = (document.getElementById('assign-notes')?.value || '').trim();
+  const vacId = Number(vacancyId);
+  const aId = Number(anketaId);
+  if (!vacId || !aId) {
+    showAlert(document.getElementById('alert-box'), 'Wakansiýa ýa-da anketa saýlanmady', 'error');
+    return;
+  }
+  const btn = document.querySelector('#modal .btn-accent, #modal button.btn-accent');
+  assignConfirmBusy = true;
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Saklanýar...';
+  }
   try {
-    const res = await api.patch(`/vacancies/${vacancyId}/assign`, {
-      anketaId,
+    const res = await api.patch(`/vacancies/${vacId}/assign`, {
+      anketaId: aId,
       assignmentStatus,
       notes: notes || undefined,
     });
     const v = res.data;
+    const shown = v.assignedCandidateName || v.assignment?.candidateName || 'Dalaşgär';
+    // Gorag: jogapda başga № gelse — ýalňyşlyk
+    if (v.assignedAnketaId && Number(v.assignedAnketaId) !== aId) {
+      showAlert(
+        document.getElementById('alert-box'),
+        `Üns: hödürlenen ID gabat gelenok (garaşylan ${aId}, gelen ${v.assignedAnketaId}). Sahypany täzeläň.`,
+        'error',
+      );
+    }
     closeModal();
     showAlert(
       document.getElementById('alert-box'),
-      `${v.assignedCandidateName} hödürlendi → ${v.companyName || ''} (jemi: ${v.assignmentCount || '?'}).`,
+      `${shown} hödürlendi → ${v.companyName || ''} (jemi: ${v.assignmentCount || '?'}).`,
       'success',
     );
     if (document.getElementById('tab-vacancies') && !document.getElementById('tab-vacancies').classList.contains('hidden')) {
@@ -2910,6 +2996,12 @@ async function confirmAssign(vacancyId, anketaId) {
     }
   } catch (e) {
     showAlert(document.getElementById('alert-box'), e.message, 'error');
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = tr('btn_offer', 'Hödürle');
+    }
+  } finally {
+    assignConfirmBusy = false;
   }
 }
 

@@ -51,6 +51,23 @@ function isRejectedAssignmentStatus(status) {
     || s === ASSIGNMENT_STATUS.LEFT_JOB;
 }
 
+/** Tölegler sanawynda galýan ýagdaýlar */
+function isFeeEligibleAssignmentStatus(status) {
+  const s = normalizeAssignmentStatus(status);
+  return s === ASSIGNMENT_STATUS.ACCEPTED || s === ASSIGNMENT_STATUS.LEFT_JOB;
+}
+
+/** Kabulden soň ýatyrylan (tölegden aýrylmaly) — Işden çykdy däl */
+function isCancelledAfterAcceptStatus(status) {
+  const s = normalizeAssignmentStatus(status);
+  return s === ASSIGNMENT_STATUS.REJECTED
+    || s === ASSIGNMENT_STATUS.REJECTED_BY_THEM
+    || s === ASSIGNMENT_STATUS.SELF_WITHDREW
+    || s === ASSIGNMENT_STATUS.OFFERED
+    || s === ASSIGNMENT_STATUS.SENT
+    || s === ASSIGNMENT_STATUS.WILL_COME;
+}
+
 module.exports = {
   ASSIGNMENT_STATUS,
   DEFAULT_ASSIGNMENT_STATUSES,
@@ -59,4 +76,6 @@ module.exports = {
   isAcceptedAssignmentStatus,
   isActiveAssignmentStatus,
   isRejectedAssignmentStatus,
+  isFeeEligibleAssignmentStatus,
+  isCancelledAfterAcceptStatus,
 };

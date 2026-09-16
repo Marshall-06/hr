@@ -6,6 +6,7 @@ const {
   INACTIVE_ASSIGNMENT_STATUSES,
   isAcceptedAssignmentStatus: isAssignmentAccepted,
   isActiveAssignmentStatus,
+  isCancelledAfterAcceptStatus,
   ASSIGNMENT_STATUS,
   normalizeAssignmentStatus,
 } = require('../utils/assignmentStatus');
@@ -635,11 +636,16 @@ class VacancyService {
     return { message: 'Wakansiýa pozuldy' };
   }
 
-  async syncVacancyLatestAssignment(vacancyId) {
-    const latest = await VacancyAssignment.findOne({
-      where: { vacancyId },
-      order: [['updatedAt', 'DESC']],
-    });
+  async syncVacancyLatestAssignment(vacancyId, preferredAssignment = null) {
+    let latest = preferredAssignment && preferredAssignment.anketaId
+      ? preferredAssignment
+      : null;
+    if (!latest) {
+      latest = await VacancyAssignment.findOne({
+        where: { vacancyId },
+        order: [['updatedAt', 'DESC'], ['id', 'DESC']],
+      });
+    }
     const vacancy = await Vacancy.findByPk(vacancyId);
     if (!vacancy) return null;
     if (!latest) {
@@ -660,7 +666,9 @@ class VacancyService {
 
   async assignCandidate(id, anketaId, assignmentStatus, currentUser = null, notes = null) {
     const vacancy = await this.getById(id, currentUser);
-    const anketa = await Anketa.findByPk(anketaId);
+    const anketaPk = Number(anketaId);
+    if (!anketaPk) throw new ApiError(400, 'Anketa ID gerek');
+    const anketa = await Anketa.findByPk(anketaPk);
     if (!anketa) throw new ApiError(404, 'Anketa tapylmady');
     if (!anketa.anketaNumber) {
       throw new ApiError(400, 'Anketa belgesi (№) ýok — hödürläp bolmaz');
@@ -672,7 +680,7 @@ class VacancyService {
     const noteText = notes != null ? String(notes).trim() : '';
 
     let assignment = await VacancyAssignment.findOne({
-      where: { vacancyId: id, anketaId },
+      where: { vacancyId: id, anketaId: anketaPk },
       paranoid: false,
     });
     const wasAccepted = assignment && !assignment.deletedAt
@@ -693,8 +701,12 @@ class VacancyService {
         ? new Date().toISOString().slice(0, 10)
         : ((assignment && !assignment.deletedAt && assignment.acceptedAt)
           || new Date().toISOString().slice(0, 10));
-    } else {
+    } else if (normalizeAssignmentStatus(status) !== ASSIGNMENT_STATUS.LEFT_JOB) {
       patch.acceptedAt = null;
+      patch.salaryReceiveAt = null;
+      patch.leftAt = null;
+    } else if (assignment && !assignment.leftAt) {
+      patch.leftAt = new Date().toISOString().slice(0, 10);
     }
     if (noteText) patch.notes = noteText;
 
@@ -707,6 +719,7 @@ class VacancyService {
       );
       await assignment.update({
         ...patch,
+        anketaId: anketaPk,
         assignedByUserId: workerId ?? patch.assignedByUserId,
       });
     } else if (assignment) {
@@ -717,12 +730,13 @@ class VacancyService {
       );
       await assignment.update({
         ...patch,
+        anketaId: anketaPk,
         assignedByUserId: workerId ?? patch.assignedByUserId,
       });
     } else {
       assignment = await VacancyAssignment.create({
         vacancyId: Number(id),
-        anketaId: Number(anketaId),
+        anketaId: anketaPk,
         candidateName,
         status,
         notes: noteText || null,
@@ -731,10 +745,12 @@ class VacancyService {
       });
     }
 
+    await assignment.reload();
+
     if (noteText && assignment?.id) {
       await commentService.addAssignNote({
         assignmentId: assignment.id,
-        anketaId: Number(anketaId),
+        anketaId: anketaPk,
         vacancy,
         body: noteText,
         userId: currentUser?.id || null,
@@ -742,14 +758,22 @@ class VacancyService {
       });
     }
 
-    await this.syncVacancyLatestAssignment(id);
+    // Şu hödürlenen adam — wakansiýanyň «soňky» meýdanynda hem şol görünsin
+    await this.syncVacancyLatestAssignment(id, assignment);
     if (isAssignmentAccepted(status) && !wasAccepted) {
-      await this.markAnketaPlacedByUs(anketaId);
+      await this.markAnketaPlacedByUs(anketaPk);
     } else if (wasAccepted && !isAssignmentAccepted(status)) {
-      await this.clearAnketaPlacedByUsIfNeeded(anketaId);
+      const keepClosedReason = normalizeAssignmentStatus(status) === ASSIGNMENT_STATUS.LEFT_JOB;
+      await this.clearAnketaPlacedByUsIfNeeded(anketaPk, { keepClosedReason });
     }
+    try {
+      require('./feePaymentService').invalidateEligibleCache();
+    } catch { /* ignore */ }
     const full = await this.getById(id);
     const json = full.toJSON ? full.toJSON() : full;
+    json.assignedAnketaId = anketaPk;
+    json.assignedCandidateName = candidateName;
+    json.assignmentStatus = status;
     json.assignment = assignment;
     json.assignmentCount = await VacancyAssignment.count({
       where: {
@@ -1099,6 +1123,13 @@ class VacancyService {
       patch.leftAt = null;
     }
 
+    // «Kabul edilmedi» / otkaz — töleglerden aýyr: acceptedAt arassala
+    if (hasStatus && wasAccepted && isCancelledAfterAcceptStatus(status)) {
+      patch.acceptedAt = null;
+      patch.salaryReceiveAt = null;
+      patch.leftAt = null;
+    }
+
     if (opts.salaryReceiveAt !== undefined) {
       const salaryDay = String(opts.salaryReceiveAt || '').trim().slice(0, 10);
       patch.salaryReceiveAt = salaryDay || null;
@@ -1113,8 +1144,9 @@ class VacancyService {
     if (becameAccepted) {
       await this.markAnketaPlacedByUs(assignment.anketaId, patch.acceptedAt);
     } else if (leftAccepted) {
-      // “Işden çykdy” wagty closedReason ýitirmeli däl — UI-da “Täze şertnama” gyzyl ýagdaýy saklansyn.
-      await this.clearAnketaPlacedByUsIfNeeded(assignment.anketaId, { keepClosedReason: true });
+      // Işden çykdy → closedReason sakla (töleg / şertnama). Kabul edilmedi → doly arassala.
+      const keepClosedReason = normStatus === ASSIGNMENT_STATUS.LEFT_JOB;
+      await this.clearAnketaPlacedByUsIfNeeded(assignment.anketaId, { keepClosedReason });
     }
     try {
       require('./feePaymentService').invalidateEligibleCache();

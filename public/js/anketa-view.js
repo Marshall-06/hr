@@ -560,7 +560,18 @@ async function openAssignVacancyPicker() {
     showAlert(document.getElementById('alert-box'), 'Anketa ID ýok', 'error');
     return;
   }
+  try {
+    const aRes = await api.get(`/anketas/${anketaId}`);
+    cachedAnketa = aRes.data;
+  } catch (e) {
+    showAlert(document.getElementById('alert-box'), e.message || 'Anketa ýüklenmedi', 'error');
+    return;
+  }
   const a = cachedAnketa || {};
+  if (Number(a.id) !== anketaId) {
+    showAlert(document.getElementById('alert-box'), 'Anketa maglumaty gabat gelenok — Ctrl+F5', 'error');
+    return;
+  }
   const faa = fullName(a) || 'Dalaşgär';
   const num = a.anketaNumber || '—';
   const prefId = Number(vacancyIdForOffer) || 0;
@@ -717,14 +728,18 @@ async function openAssignOffer(vacIdOverride) {
     return;
   }
   try {
+    // Cache ýalňyş adam görkezmez ýaly — hemişe URL-däki ID bilen täzeden al
     const [vRes, aRes, cRes, statuses] = await Promise.all([
       api.get(`/vacancies/${vacId}`),
-      cachedAnketa ? Promise.resolve({ data: cachedAnketa }) : api.get(`/anketas/${anketaId}`),
+      api.get(`/anketas/${anketaId}`),
       api.get(`/vacancies/assignments/anketa-counts?ids=${anketaId}`).catch(() => ({ data: {} })),
       loadAssignStatuses(),
     ]);
     const v = vRes.data;
     const a = aRes.data;
+    if (Number(a?.id) !== anketaId) {
+      throw new Error('Anketa maglumaty gabat gelenok — sahypany täzeläň (Ctrl+F5)');
+    }
     cachedAnketa = a;
     vacancyIdForOffer = vacId;
     const ankCounts = cRes.data?.[anketaId] || { total: 0, active: 0 };
@@ -799,25 +814,58 @@ async function openAssignOffer(vacIdOverride) {
   }
 }
 
+let assignOfferBusy = false;
+
 async function confirmAssignOffer(vacId, anketaId) {
+  if (assignOfferBusy) return;
   const assignmentStatus = document.getElementById('view-assign-status')?.value || 'Hödürlendi';
   const notes = (document.getElementById('view-assign-notes')?.value || '').trim();
+  const expectId = Number(anketaId) || Number(id);
+  const vacancyId = Number(vacId);
+  if (!expectId || !vacancyId) {
+    showAlert(document.getElementById('alert-box'), 'Wakansiýa ýa-da anketa saýlanmady', 'error');
+    return;
+  }
+  const btn = document.getElementById('btn-assign-confirm');
+  assignOfferBusy = true;
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Saklanýar...';
+  }
   try {
-    const res = await api.patch(`/vacancies/${vacId}/assign`, {
-      anketaId,
+    const res = await api.patch(`/vacancies/${vacancyId}/assign`, {
+      anketaId: expectId,
       assignmentStatus,
       notes: notes || undefined,
     });
     const v = res.data;
+    if (v.assignedAnketaId && Number(v.assignedAnketaId) !== expectId) {
+      showAlert(
+        document.getElementById('alert-box'),
+        `Üns: hödürlenen ID gabat gelenok (garaşylan ${expectId}, gelen ${v.assignedAnketaId}). Ctrl+F5.`,
+        'error',
+      );
+    }
+    const shown = v.assignedCandidateName
+      || v.assignment?.candidateName
+      || (cachedAnketa && Number(cachedAnketa.id) === expectId
+        ? `№ ${cachedAnketa.anketaNumber} — ${fullName(cachedAnketa)}`
+        : 'Dalaşgär');
     closeAssignModal();
     showAlert(
       document.getElementById('alert-box'),
-      `${v.assignedCandidateName || 'Dalaşgär'} hödürlendi → ${v.companyName || ''} (jemi: ${v.assignmentCount || '?'}).`,
+      `${shown} hödürlendi → ${v.companyName || ''} (jemi: ${v.assignmentCount || '?'}).`,
       'success',
     );
     await load();
   } catch (err) {
     showAlert(document.getElementById('alert-box'), err.message || 'Hödürleme şowsuz', 'error');
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = `Hödürle (№ ${esc((cachedAnketa && cachedAnketa.anketaNumber) || expectId)})`;
+    }
+  } finally {
+    assignOfferBusy = false;
   }
 }
 

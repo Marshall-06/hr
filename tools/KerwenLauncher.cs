@@ -84,8 +84,18 @@ namespace KerwenLauncher
 
                 Log("root=" + root + " node=" + node + " serverOnly=" + serverOnly);
 
-                TryEnsureLanAccess();
+                // Port eýýäm açyk → diňe brauzer (PowerShell / LAN / Postgres synag ýok — flash we freeze bolmaz)
+                if (IsPortOpen(HttpPort))
+                {
+                    Log("Port eýýäm açyk — çalt giriş");
+                    if (!serverOnly)
+                        OpenBrowser();
+                    return;
+                }
+
+                // Serwer ýok — bir gezek Postgres + LAN (diňe şu ýagdaýda)
                 TryStartPostgresServices();
+                TryEnsureLanAccessAsync();
 
                 // Awtostart: çalt synanyş (öňki 4×3min = 5–10 min soň başlaýardy)
                 // Panel: 2 synanyş; awtostart: 12 synanyş × ~25s = ~5 min içinde durnukly
@@ -122,7 +132,7 @@ namespace KerwenLauncher
                     if (dbPort > 0)
                     {
                         // Gysga garaş — Node özi 90s Postgres synaýar; bu ýerde uzak saklama
-                        int dbWait = serverOnly ? 8000 : 20000;
+                        int dbWait = serverOnly ? 6000 : 8000;
                         Log("PostgreSQL garaşylýar (port " + dbPort + ", max " + (dbWait / 1000) + "s)...");
                         if (!WaitForPort(dbPort, dbWait))
                             Log("PostgreSQL henizem ýok — Node başladylýar (özi garaşar)...");
@@ -277,34 +287,65 @@ namespace KerwenLauncher
         }
 
         /// <summary>
-        /// Node-y aýratyn proses hökmünde başlat (launcher ýapylsa hem galýar).
-        /// WorkingDirectory = root → kiril / OneDrive ýoly cmd cd-siz.
+        /// Node-y gizlin detached başlat — cmd.exe / start ýOK (shell flash bolmaz).
         /// </summary>
         static void StartServerDetached(string node, string root)
         {
-            string installDir = InstallDir();
-            try { Directory.CreateDirectory(installDir); } catch { }
             string logDir = Path.Combine(root, "logs");
             try { Directory.CreateDirectory(logDir); } catch { }
 
-            // LocalAppData-da ASCII runner — diňe node ýolyny ýazýar; cd ýok
-            string runner = Path.Combine(installDir, "run-server-hidden.cmd");
-            var sb = new StringBuilder();
-            sb.AppendLine("@echo off");
-            sb.AppendLine("\"" + node + "\" --max-old-space-size=4096 src/server.js >> \"logs\\server-stdout.log\" 2>> \"logs\\server-stderr.log\"");
-            File.WriteAllText(runner, sb.ToString(), new UTF8Encoding(true));
+            string outLog = Path.Combine(logDir, "server-stdout.log");
+            string errLog = Path.Combine(logDir, "server-stderr.log");
 
             var psi = new ProcessStartInfo
             {
-                FileName = "cmd.exe",
-                Arguments = "/c start \"KerwenServer\" /b \"" + runner + "\"",
+                FileName = node,
+                Arguments = "--max-old-space-size=4096 src/server.js",
                 WorkingDirectory = root,
                 UseShellExecute = false,
                 CreateNoWindow = true,
                 WindowStyle = ProcessWindowStyle.Hidden,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
             };
-            Process.Start(psi);
-            Log("Serwer başlady (detached): " + root);
+
+            try
+            {
+                var p = Process.Start(psi);
+                if (p == null)
+                {
+                    Log("Node Start=null");
+                    return;
+                }
+                // Log-a ýaz (fon — launcher garaşmaýar)
+                BeginPipeToFile(p.StandardOutput, outLog);
+                BeginPipeToFile(p.StandardError, errLog);
+                Log("Serwer başlady (gizlin node): " + root + " pid=" + p.Id);
+            }
+            catch (Exception ex)
+            {
+                Log("StartServerDetached: " + ex.Message);
+            }
+        }
+
+        static void BeginPipeToFile(System.IO.StreamReader reader, string path)
+        {
+            ThreadPool.QueueUserWorkItem(_ =>
+            {
+                try
+                {
+                    using (reader)
+                    using (var fs = new FileStream(path, FileMode.Append, FileAccess.Write, FileShare.ReadWrite))
+                    using (var sw = new StreamWriter(fs, Encoding.UTF8))
+                    {
+                        sw.AutoFlush = true;
+                        string line;
+                        while ((line = reader.ReadLine()) != null)
+                            sw.WriteLine(line);
+                    }
+                }
+                catch { }
+            });
         }
 
         static bool WaitForProjectReady(string root, int timeoutMs)
@@ -438,35 +479,38 @@ namespace KerwenLauncher
         }
 
         /// <summary>
-        /// Wi-Fi Public / Firewall ýapylan bolsa — Task Scheduler üsti bilen düzedýär (UAC ýok).
-        /// Ilki bir gezek tools\firewall-acyk.bat ýa-da hemishelik-we-ynamly.bat Task döretmeli.
+        /// Wi-Fi Public / Firewall — Task-y fon-da başlat, garaşma (freeze ýok).
         /// </summary>
-        static void TryEnsureLanAccess()
+        static void TryEnsureLanAccessAsync()
         {
-            try
+            ThreadPool.QueueUserWorkItem(_ =>
             {
-                var psi = new ProcessStartInfo
+                try
                 {
-                    FileName = "schtasks.exe",
-                    Arguments = "/Run /TN \"KerwenLanAccess\"",
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    CreateNoWindow = true,
-                };
-                using (var p = Process.Start(psi))
-                {
-                    if (p == null) return;
-                    p.WaitForExit(8000);
-                    Log(p.ExitCode == 0
-                        ? "LAN access Task işledi (KerwenLanAccess)"
-                        : "LAN access Task ýok/işlemedi — bir gezek tools\\firewall-acyk.bat işlediň");
+                    var psi = new ProcessStartInfo
+                    {
+                        FileName = "schtasks.exe",
+                        Arguments = "/Run /TN \"KerwenLanAccess\"",
+                        UseShellExecute = false,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        CreateNoWindow = true,
+                        WindowStyle = ProcessWindowStyle.Hidden,
+                    };
+                    using (var p = Process.Start(psi))
+                    {
+                        if (p == null) return;
+                        p.WaitForExit(3000);
+                        Log(p.ExitCode == 0
+                            ? "LAN access Task fon-da işledi"
+                            : "LAN access Task ýok — bir gezek tools\\firewall-acyk.bat");
+                    }
                 }
-            }
-            catch (Exception ex)
-            {
-                Log("LAN access: " + ex.Message);
-            }
+                catch (Exception ex)
+                {
+                    Log("LAN access: " + ex.Message);
+                }
+            });
         }
 
         static void TryStartPostgresServices()
@@ -476,17 +520,24 @@ namespace KerwenLauncher
                 var psi = new ProcessStartInfo
                 {
                     FileName = "powershell.exe",
-                    Arguments = "-NoProfile -ExecutionPolicy Bypass -Command \"Get-Service -Name '*postgres*','*pgsql*' -EA SilentlyContinue | ForEach-Object { if ($_.StartType -eq 'Disabled') { try { Set-Service $_.Name -StartupType Automatic -EA SilentlyContinue } catch {} }; if ($_.Status -ne 'Running') { try { Start-Service $_.Name -EA Stop; Write-Output ('started '+$_.Name) } catch { Write-Output ('fail '+$_.Name+': '+$_.Exception.Message) } } else { Write-Output ('already '+$_.Name) } }\"",
+                    Arguments = "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -Command \"Get-Service -Name '*postgres*','*pgsql*' -EA SilentlyContinue | ForEach-Object { if ($_.StartType -eq 'Disabled') { try { Set-Service $_.Name -StartupType Automatic -EA SilentlyContinue } catch {} }; if ($_.Status -ne 'Running') { try { Start-Service $_.Name -EA Stop; Write-Output ('started '+$_.Name) } catch { Write-Output ('fail '+$_.Name) } } else { Write-Output ('already '+$_.Name) } }\"",
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     CreateNoWindow = true,
+                    WindowStyle = ProcessWindowStyle.Hidden,
                 };
                 using (var p = Process.Start(psi))
                 {
                     if (p == null) return;
                     string o = p.StandardOutput.ReadToEnd();
-                    p.WaitForExit(12000);
+                    // Max 4s — panel freeze bolmaz
+                    if (!p.WaitForExit(4000))
+                    {
+                        try { p.Kill(); } catch { }
+                        Log("Postgres: timeout (dowam)");
+                        return;
+                    }
                     if (!string.IsNullOrWhiteSpace(o))
                         Log("Postgres: " + o.Replace("\r", " ").Replace("\n", " ").Trim());
                 }

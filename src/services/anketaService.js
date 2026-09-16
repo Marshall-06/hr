@@ -67,7 +67,16 @@ const ANKETA_CAST_COLUMNS = [
   'employment_date',
 ];
 
-/** Sanaw — agyr JSON sütunlary ýükleme */
+/** Dil, programma, bilim, iş tejribesi we goşmaça maglumatlar */
+const ANKETA_JSON_COLUMNS = [
+  'education_details',
+  'work_experience',
+  'languages',
+  'computer_skills',
+  'extra_data',
+];
+
+/** Sanaw — agyr JSON sütunlary ýükleme (gözlegde JSON ulanylýar) */
 const ANKETA_LIST_ATTRS = [
   'id', 'anketaNumber', 'formDate', 'familyName', 'firstName', 'patronymic',
   'desiredPosition', 'phone', 'email', 'gender', 'birthYear', 'status',
@@ -82,15 +91,14 @@ function buildAnketaSearchFilter(search) {
   const raw = String(search || '').trim();
   if (!raw) return {};
 
-  const tokens = raw.split(/\s+/).filter(Boolean).slice(0, 6);
+  const tokens = raw.split(/\s+/).filter(Boolean).slice(0, 8);
 
   const orForToken = (token) => {
     const like = `%${escapeLike(token)}%`;
     const ors = ANKETA_TEXT_FIELDS.map((field) => ({
       [field]: { [Op.iLike]: like },
     }));
-    // JSON sütunlaryny hemişe skanirleme — CPU ýüklenmesini azaltýar
-    ANKETA_CAST_COLUMNS.forEach((dbCol) => {
+    [...ANKETA_JSON_COLUMNS, ...ANKETA_CAST_COLUMNS].forEach((dbCol) => {
       ors.push(where(cast(col(dbCol), 'TEXT'), { [Op.iLike]: like }));
     });
     return ors;

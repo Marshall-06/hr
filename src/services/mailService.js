@@ -215,23 +215,35 @@ function fromField(c) {
   return raw || undefined;
 }
 
-function createTransport(c, port) {
+function createTransport(c, port, { family } = {}) {
   const nm = loadNodemailer();
   const p = Number(port || c.port || 587);
   const secure = p === 465;
-  return nm.createTransport({
+  const opts = {
     host: 'smtp.gmail.com',
     port: p,
     secure,
     requireTLS: !secure,
-    family: 4,
     auth: { user: c.user, pass: c.pass },
     pool: false,
-    connectionTimeout: 25000,
-    greetingTimeout: 20000,
+    connectionTimeout: 35000,
+    greetingTimeout: 35000,
     socketTimeout: 180000,
     tls: { minVersion: 'TLSv1.2', servername: 'smtp.gmail.com' },
-  });
+  };
+  // family:4 — IPv6 greýing/blok meselelerinde has durnukly
+  if (family === 4 || family == null) opts.family = 4;
+  return nm.createTransport(opts);
+}
+
+function isConnErr(msg) {
+  return /ECONNECTION|ETIMEDOUT|closed unexpectedly|ECONNRESET|timeout|Greeting never received|ENOTFOUND|EHOSTUNREACH|ESOCKET/i.test(
+    String(msg || ''),
+  );
+}
+
+function sleep(ms) {
+  return new Promise((r) => setTimeout(r, ms));
 }
 
 function getTransporter() {
@@ -276,8 +288,8 @@ async function loginAndVerify({ email, password }) {
   return getStatus();
 }
 
-async function sendVia(c, port, payload) {
-  const transport = createTransport(c, port);
+async function sendVia(c, port, payload, family) {
+  const transport = createTransport(c, port, { family });
   try {
     return await transport.sendMail(payload);
   } finally {
@@ -313,11 +325,17 @@ async function sendMail(opts) {
   if (preferred !== 465) ports.push(465);
   if (preferred !== 587) ports.push(587);
 
+  // 587/465 + IPv4; bir gezek gaýtala (ISP/DPI gysga üzülmeler)
+  const attempts = [];
+  for (const port of ports) attempts.push({ port, family: 4 });
+  for (const port of ports) attempts.push({ port, family: 4, retry: true });
+
   let lastErr = null;
-  for (const port of ports) {
+  for (const attempt of attempts) {
+    if (attempt.retry) await sleep(1500);
     try {
-      const info = await sendVia(c, port, payload);
-      console.log(`[mail] ugradyldy → ${recipients.join(', ')} (${info.accepted || []}) port=${port}`);
+      const info = await sendVia(c, attempt.port, payload, attempt.family);
+      console.log(`[mail] ugradyldy → ${recipients.join(', ')} (${info.accepted || []}) port=${attempt.port}`);
       return {
         mode: 'sent',
         messageId: info.messageId,
@@ -332,12 +350,17 @@ async function sendMail(opts) {
       if (/Invalid login|Username and Password not accepted|EAUTH|535|BadCredentials/i.test(msg)) {
         throw new ApiError(401, 'Gmail kabul etmedi — App Password ýa-da email nädogry. Sazlamalar → Poçta täzeläň.');
       }
-      console.warn(`[mail] port ${port} şowsuz:`, msg.slice(0, 160));
+      console.warn(`[mail] port ${attempt.port} şowsuz:`, msg.slice(0, 160));
+      // Auth däl — indiki port / synag
+      if (!isConnErr(msg)) break;
     }
   }
   const msg = String(lastErr?.message || lastErr || '');
-  if (/ECONNECTION|ETIMEDOUT|closed unexpectedly|ECONNRESET|timeout/i.test(msg)) {
-    throw new ApiError(502, 'Gmail baglanyşyk haýal/üzülýär. VPN synap görüň, soň täzeden Ugrat.');
+  if (isConnErr(msg)) {
+    throw new ApiError(
+      502,
+      'Gmail SMTP şu torda bloklanan/haýal (Greeting ýok). VPN açyň, soň täzeden Ugrat.',
+    );
   }
   throw new ApiError(502, `E-poçta ugradylmady: ${msg.slice(0, 160)}`);
 }

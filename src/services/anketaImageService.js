@@ -159,7 +159,12 @@ $crop.Dispose()
 Write-Output ("ok " + $cw + "x" + $ch)
 `;
 
-  const r = spawnSync('powershell', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', ps], {
+  const r = spawnSync('powershell', [
+    '-NoProfile',
+    '-WindowStyle', 'Hidden',
+    '-ExecutionPolicy', 'Bypass',
+    '-Command', ps,
+  ], {
     encoding: 'utf8',
     windowsHide: true,
     timeout: 120000,
@@ -302,54 +307,83 @@ async function buildAnketaJpgAttachment(anketa) {
   const id = plain.id || plain.anketaNumber || Date.now();
   const cid = `anketa-${id}@kerwen`;
 
-  // Saýlanan skan papkada №.jpg bar bolsa — şol JPG (programma daşynda / başga papka)
-  const resolved = scanFolder.resolveScanForAnketa(plain);
-  if (resolved?.path && fs.existsSync(resolved.path)) {
-    const content = fs.readFileSync(resolved.path);
-    const ext = path.extname(resolved.path);
-    const isJpeg = ['.jpg', '.jpeg'].includes(ext.toLowerCase())
-      || (content[0] === 0xff && content[1] === 0xd8);
-    return {
-      filename: isJpeg ? filename : filename.replace(/\.jpg$/i, ext.toLowerCase() || '.jpg'),
-      content,
-      contentType: scanFolder.mimeForExt(ext),
-      cid,
-      name: fullName(plain),
-      source: resolved.source || 'scan',
-    };
+  // Diňe köne (awgust öňi) we doly skan JPG — täze anketalara 3×4 / boş faýl goşulmaz
+  const preferScan = scanFolder.prefersFolderScanView(plain);
+  if (preferScan) {
+    const resolved = scanFolder.resolveScanForAnketa(plain);
+    if (resolved?.path && fs.existsSync(resolved.path)) {
+      let content;
+      try {
+        content = fs.readFileSync(resolved.path);
+      } catch (e) {
+        console.warn('Skan JPG okalmady:', resolved.path, e.message);
+        content = null;
+      }
+      const okSize = content && content.length >= 8 * 1024;
+      const isJpeg = okSize && content[0] === 0xff && content[1] === 0xd8;
+      const isPng = okSize && content[0] === 0x89 && content[1] === 0x50;
+      if (okSize && (isJpeg || isPng)) {
+        const ext = path.extname(resolved.path);
+        return {
+          filename: isJpeg ? filename : filename.replace(/\.jpg$/i, ext.toLowerCase() || '.png'),
+          content,
+          contentType: scanFolder.mimeForExt(ext),
+          cid,
+          name: fullName(plain),
+          source: resolved.source || 'scan',
+        };
+      }
+      console.warn('Skan faýl nädogry/kiçi, programma JPG ýasalýar:', resolved.path);
+    }
   }
 
   const htmlFile = buildAnketaHtmlAttachment(plain);
   const content = await htmlToJpegBuffer(htmlFile.content);
-  const isJpeg = content[0] === 0xff && content[1] === 0xd8;
+  const isJpeg = content && content.length > 1000 && content[0] === 0xff && content[1] === 0xd8;
+  if (!isJpeg) {
+    throw new ApiError(503, 'Anketa JPG nädogry döredi — Chrome/Edge barlagyň we gaýtadan ugradyň');
+  }
   return {
-    filename: isJpeg ? filename : filename.replace(/\.jpg$/i, '.png'),
+    filename,
     content,
-    contentType: isJpeg ? 'image/jpeg' : 'image/png',
+    contentType: 'image/jpeg',
     cid,
     name: fullName(plain),
     source: 'program',
   };
 }
-/** JPG synap gör; bolmasa HTML goşundy — poçta ýene-de gider. */
+
+/**
+ * Poçta üçin hemişe açylýan JPG. HTML fallback — Outlook/telefon açmaýar.
+ */
 async function buildAnketaMailAttachment(anketa) {
   try {
     return await buildAnketaJpgAttachment(anketa);
   } catch (e) {
-    console.warn('Anketa JPG ýasalmady, HTML iberilýär:', e.message || e);
-    const plain = typeof anketa.toJSON === 'function' ? anketa.toJSON() : anketa;
-    const htmlFile = buildAnketaHtmlAttachment(plain);
-    const id = plain.id || Date.now();
-    return {
-      filename: String(htmlFile.filename || 'anketa.html'),
-      content: Buffer.isBuffer(htmlFile.content)
-        ? htmlFile.content
-        : Buffer.from(String(htmlFile.content || ''), 'utf8'),
-      contentType: 'text/html; charset=utf-8',
-      cid: `anketa-${id}@kerwen`,
-      name: fullName(plain),
-      source: 'html-fallback',
-    };
+    console.warn('Anketa JPG ýasalmady, ikinji synag:', e.message || e);
+    // Bir gezek has HTML→CLI ýoly bilen syna (puppeteer şowsuz bolsa)
+    try {
+      const plain = typeof anketa.toJSON === 'function' ? anketa.toJSON() : anketa;
+      const htmlFile = buildAnketaHtmlAttachment(plain);
+      const executablePath = findBrowserExecutable();
+      if (!executablePath) throw e;
+      const content = htmlToJpegViaCli(htmlFile.content, executablePath);
+      const isJpeg = content && content[0] === 0xff && content[1] === 0xd8;
+      if (!isJpeg) throw e;
+      return {
+        filename: jpgFileName(plain),
+        content,
+        contentType: 'image/jpeg',
+        cid: `anketa-${plain.id || Date.now()}@kerwen`,
+        name: fullName(plain),
+        source: 'program-cli',
+      };
+    } catch (e2) {
+      throw new ApiError(
+        503,
+        `Anketa JPG döredilmedi (programma formaty). Chrome ýa-da Edge gurnalyň we serweri täzeden açyň. ${e2.message || e.message || ''}`,
+      );
+    }
   }
 }
 

@@ -351,9 +351,8 @@ async function sendAnketaToContact(anketaId, { to, note, vacancyId }, currentUse
   const attachments = [{
     filename: file.filename,
     content: file.content,
-    contentType: file.contentType,
-    cid: file.cid,
-    contentDisposition: 'inline',
+    contentType: file.contentType || 'image/jpeg',
+    contentDisposition: 'attachment',
   }];
 
   const { senderName, senderPhone } = senderFooter(currentUser);

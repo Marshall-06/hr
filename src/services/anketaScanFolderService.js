@@ -263,11 +263,20 @@ function looksLikeFullPageScan(absPath) {
 /** Papkadan ýa-da DB extraData.scanUrl / photoUrl (köne skan) */
 function resolveScanForAnketa(anketa) {
   const folder = findScanFileByAnketaNumber(anketa?.anketaNumber);
-  if (folder) return { path: folder, source: 'folder' };
+  // Diňe doly sahypa skan — 3×4 №.jpg (kici) skan hökmünde ulanylmaz
+  if (folder && looksLikeFullPageScan(folder)) {
+    try {
+      if (fs.statSync(folder).size >= 8 * 1024) {
+        return { path: folder, source: 'folder' };
+      }
+    } catch { /* ignore */ }
+  }
 
   const extra = parseExtraData(anketa?.extraData || anketa?.extra_data);
   const upload = resolveUploadedScanPath(extra?.scanUrl);
-  if (upload) return { path: upload, source: 'upload' };
+  if (upload && looksLikeFullPageScan(upload)) {
+    return { path: upload, source: 'upload' };
+  }
 
   // Köne: diňe photoUrl-da doly skan (3×4 däl)
   const photoRefs = [];

@@ -207,30 +207,44 @@ try {
   } catch {}
 }
 
-# Watchdog: her 2 minut — port 8000 ýok bolsa serweri başlat (5–10 min boşluk bolmaz)
+# Watchdog: her 2 minut — port 8000 ýok bolsa serweri başlat (shell flash ýok — .vbs)
 $watchPs = Join-Path $PSScriptRoot 'watchdog-server.ps1'
+$watchVbs = Join-Path $PSScriptRoot 'watchdog-server.vbs'
 if (Test-Path -LiteralPath $watchPs) {
   Copy-Item -LiteralPath $watchPs -Destination (Join-Path $InstallDir 'watchdog-server.ps1') -Force -ErrorAction SilentlyContinue
-  $watchLocal = Join-Path $InstallDir 'watchdog-server.ps1'
+  if (Test-Path -LiteralPath $watchVbs) {
+    Copy-Item -LiteralPath $watchVbs -Destination (Join-Path $InstallDir 'watchdog-server.vbs') -Force -ErrorAction SilentlyContinue
+  }
+  $watchLocalPs = Join-Path $InstallDir 'watchdog-server.ps1'
+  $watchLocalVbs = Join-Path $InstallDir 'watchdog-server.vbs'
+  $watchExe = if (Test-Path -LiteralPath $watchLocalVbs) { 'wscript.exe' } else { 'powershell.exe' }
+  $watchArg = if (Test-Path -LiteralPath $watchLocalVbs) {
+    "//B `"$watchLocalVbs`""
+  } else {
+    "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$watchLocalPs`""
+  }
   try {
-    $wAction = New-ScheduledTaskAction `
-      -Execute 'powershell.exe' `
-      -Argument ("-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"{0}`"" -f $watchLocal)
+    $wAction = New-ScheduledTaskAction -Execute $watchExe -Argument $watchArg
     $wTrigger = New-ScheduledTaskTrigger -Once -At (Get-Date).Date -RepetitionInterval (New-TimeSpan -Minutes 2) -RepetitionDuration ([TimeSpan]::MaxValue)
     $wSettings = New-ScheduledTaskSettingsSet `
       -AllowStartIfOnBatteries `
       -DontStopIfGoingOnBatteries `
       -StartWhenAvailable `
       -ExecutionTimeLimit (New-TimeSpan -Minutes 5) `
-      -MultipleInstances IgnoreNew
+      -MultipleInstances IgnoreNew `
+      -Hidden
     $wPrincipal = New-ScheduledTaskPrincipal -UserId $env:USERNAME -LogonType Interactive -RunLevel Limited
     Unregister-ScheduledTask -TaskName $watchName -Confirm:$false -ErrorAction SilentlyContinue
     Register-ScheduledTask -TaskName $watchName -Action $wAction -Trigger $wTrigger -Settings $wSettings -Principal $wPrincipal -Force -ErrorAction Stop | Out-Null
-    Write-Host ("  Watchdog: {0} (her 2 min, port 8000)" -f $watchName) -ForegroundColor Green
+    Write-Host ("  Watchdog: {0} (her 2 min, gizlin)" -f $watchName) -ForegroundColor Green
   } catch {
     try {
       schtasks /Delete /TN $watchName /F 2>$null | Out-Null
-      $tr = "powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$watchLocal`""
+      $tr = if (Test-Path -LiteralPath $watchLocalVbs) {
+        "wscript.exe //B `"$watchLocalVbs`""
+      } else {
+        "powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$watchLocalPs`""
+      }
       schtasks /Create /TN $watchName /TR $tr /SC MINUTE /MO 2 /RL LIMITED /F | Out-Null
       Write-Host ("  Watchdog schtasks: {0}" -f $watchName) -ForegroundColor Green
     } catch {

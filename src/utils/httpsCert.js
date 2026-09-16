@@ -60,7 +60,13 @@ function ipsChanged(current) {
 }
 
 function runPsFile(tmpPs) {
-  return execFileSync('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', tmpPs], {
+  // -WindowStyle Hidden + windowsHide — garaşyk shell flash öňüni alýar
+  return execFileSync('powershell.exe', [
+    '-NoProfile',
+    '-WindowStyle', 'Hidden',
+    '-ExecutionPolicy', 'Bypass',
+    '-File', tmpPs,
+  ], {
     encoding: 'utf8',
     windowsHide: true,
   });

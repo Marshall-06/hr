@@ -473,19 +473,28 @@ class FeePaymentService {
     const [rows] = await sequelize.query(`
       SELECT DISTINCT anketa_id AS id FROM vacancy_assignments
       WHERE deleted_at IS NULL
-        AND (
-          status IN ('Kabul edildi', 'Işden çykdy')
-          OR accepted_at IS NOT NULL
-        )
+        AND status IN ('Kabul edildi', 'Işden çykdy')
       UNION
       SELECT DISTINCT anketa_id AS id FROM agency_fee_payments
       WHERE anketa_id IS NOT NULL
+        AND EXISTS (
+          SELECT 1 FROM vacancy_assignments va
+          WHERE va.anketa_id = agency_fee_payments.anketa_id
+            AND va.deleted_at IS NULL
+            AND va.status IN ('Kabul edildi', 'Işden çykdy')
+        )
       UNION
-      SELECT id FROM anketas
-      WHERE deleted_at IS NULL
+      SELECT a.id FROM anketas a
+      WHERE a.deleted_at IS NULL
         AND (
-          closed_reason ILIKE '%Biziň ýerleşdiren%'
-          OR closed_reason ILIKE '%bizin%yerlesdiren%'
+          a.closed_reason ILIKE '%Biziň ýerleşdiren%'
+          OR a.closed_reason ILIKE '%bizin%yerlesdiren%'
+        )
+        AND EXISTS (
+          SELECT 1 FROM vacancy_assignments va
+          WHERE va.anketa_id = a.id
+            AND va.deleted_at IS NULL
+            AND va.status IN ('Kabul edildi', 'Işden çykdy')
         )
     `);
 
@@ -511,19 +520,7 @@ class FeePaymentService {
       SELECT 1 AS ok WHERE EXISTS (
         SELECT 1 FROM vacancy_assignments
         WHERE anketa_id = :id AND deleted_at IS NULL
-          AND (
-            status IN ('Kabul edildi', 'Işden çykdy')
-            OR accepted_at IS NOT NULL
-          )
-      ) OR EXISTS (
-        SELECT 1 FROM agency_fee_payments WHERE anketa_id = :id
-      ) OR EXISTS (
-        SELECT 1 FROM anketas
-        WHERE id = :id AND deleted_at IS NULL
-          AND (
-            closed_reason ILIKE '%Biziň ýerleşdiren%'
-            OR closed_reason ILIKE '%bizin%yerlesdiren%'
-          )
+          AND status IN ('Kabul edildi', 'Işden çykdy')
       )
       LIMIT 1
     `, { replacements: { id } });
