@@ -37,6 +37,11 @@ const User = sequelize.define('User', {
     defaultValue: false,
     field: 'can_delete_anketa',
   },
+  /** Operator telefon — anketa e-poçta aşagynda (mysal: 865242856) */
+  phone: {
+    type: DataTypes.STRING(40),
+    allowNull: true,
+  },
 }, {
   tableName: 'users',
   paranoid: true,

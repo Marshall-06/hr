@@ -72,6 +72,26 @@ const start = async () => {
       ADD COLUMN IF NOT EXISTS can_delete_anketa BOOLEAN NOT NULL DEFAULT FALSE
     `);
     await sequelize.query(`
+      ALTER TABLE users
+      ADD COLUMN IF NOT EXISTS phone VARCHAR(40)
+    `);
+    // Köne operatorlar — telefon boş bolsa bir gezek doldur (Ulanyjylar soň üýtgedip biler)
+    await sequelize.query(`
+      UPDATE users SET phone = '865242856'
+      WHERE phone IS NULL AND deleted_at IS NULL
+        AND (LOWER(full_name) LIKE '%merjen%' OR LOWER(username) LIKE '%merjen%')
+    `);
+    await sequelize.query(`
+      UPDATE users SET phone = '863622296'
+      WHERE phone IS NULL AND deleted_at IS NULL
+        AND (LOWER(full_name) LIKE '%mahri%' OR LOWER(username) LIKE '%mahri%')
+    `);
+    await sequelize.query(`
+      UPDATE users SET phone = '865124815'
+      WHERE phone IS NULL AND deleted_at IS NULL
+        AND (LOWER(full_name) LIKE '%enejan%' OR LOWER(username) LIKE '%enejan%')
+    `);
+    await sequelize.query(`
       DO $body$
       DECLARE r record;
       BEGIN

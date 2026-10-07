@@ -6400,6 +6400,7 @@ async function loadUsers() {
         <td>${u.id}</td>
         <td>${escHtml(u.fullName || '-')}</td>
         <td>${escHtml(u.username)}</td>
+        <td>${escHtml(u.phone || '—')}</td>
         <td><span class="badge ${u.role === 'admin' ? 'badge-info' : 'badge-warning'}">${escHtml(u.role)}</span></td>
         <td><span class="badge ${u.isActive ? 'badge-success' : 'badge-danger'}">${u.isActive ? 'Hawa' : 'Ýok'}</span></td>
         <td>${delBadge}</td>
@@ -6412,7 +6413,7 @@ async function loadUsers() {
           </div>
         </td>
       </tr>`;
-    }).join('') || '<tr><td colspan="7">Ulanyjy ýok</td></tr>';
+    }).join('') || '<tr><td colspan="8">Ulanyjy ýok</td></tr>';
   } catch (e) {
     showAlert(document.getElementById('alert-box'), e.message, 'error');
   }
@@ -6440,6 +6441,8 @@ function resetUserForm() {
   document.getElementById('user-cancel-btn').style.display = 'none';
   document.getElementById('user-role').value = 'operator';
   document.getElementById('user-active').value = 'true';
+  const phoneEl = document.getElementById('user-phone');
+  if (phoneEl) phoneEl.value = '';
   const delSel = document.getElementById('user-can-delete-anketa');
   if (delSel) delSel.value = 'false';
   syncUserDeleteAnketaField();
@@ -6451,6 +6454,8 @@ function editUser(id) {
   document.getElementById('user-edit-id').value = u.id;
   document.getElementById('user-fullName').value = u.fullName || '';
   document.getElementById('user-username').value = u.username || '';
+  const phoneEl = document.getElementById('user-phone');
+  if (phoneEl) phoneEl.value = u.phone || '';
   document.getElementById('user-password').value = '';
   document.getElementById('user-password').required = false;
   document.getElementById('user-pass-hint').textContent = '(üýtgetmek isleseňiz)';
@@ -6524,6 +6529,7 @@ if (userForm) {
     const payload = {
       fullName: document.getElementById('user-fullName').value.trim(),
       username: document.getElementById('user-username').value.trim(),
+      phone: String(document.getElementById('user-phone')?.value || '').trim(),
       role,
       isActive: document.getElementById('user-active').value === 'true',
       canDeleteAnketa: role === 'operator'

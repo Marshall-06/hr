@@ -15,13 +15,13 @@ function esc(s) {
 }
 
 /**
- * Operator telefonlary — e-poçta aşagynda ugradyjynyň belgisi.
- * Merjen 865242856 · Mahri 863622296 · Enejan 865124815
+ * Köne ätiýaç — Ulanyjylar → Telefon boş bolsa ady boýunça.
+ * Täze operatorlar: Ulanyjylar sahypasynda Telefon meýdanyna ýazyň.
  */
 const OPERATOR_PHONES = [
-  { keys: ['merjen', 'merjen'], phone: '865242856' },
-  { keys: ['mahri', 'mahri'], phone: '863622296' },
-  { keys: ['enejan', 'enejan'], phone: '865124815' },
+  { keys: ['merjen'], phone: '865242856' },
+  { keys: ['mahri'], phone: '863622296' },
+  { keys: ['enejan'], phone: '865124815' },
 ];
 
 function foldName(value) {
@@ -53,6 +53,12 @@ function formatOperatorPhone(raw) {
 
 function resolveOperatorPhone(user) {
   if (!user) return formatOperatorPhone(env.company.phone) || '';
+  // 1) Ulanyjylar sahypasyndaky Telefon (esasy)
+  if (user.phone) {
+    const formatted = formatOperatorPhone(user.phone);
+    if (formatted) return formatted;
+  }
+  // 2) Köne ady boýunça ätiýaç (Merjen / Mahri / Enejan)
   const parts = [user.username, user.fullName, String(user.fullName || '').split(/\s+/)[0]]
     .map(foldName)
     .filter(Boolean);

@@ -1,7 +1,17 @@
 const { Op } = require('sequelize');
 const { User } = require('../models');
 const ApiError = require('../utils/ApiError');
-const { hashPassword, comparePassword, generateToken } = require('../middlewares/auth');
+const { hashPassword, comparePassword, generateToken, clearAuthUserCache } = require('../middlewares/auth');
+
+/** Telefon — diňe sanlar (8XXXXXXXX ýa-da 993…) */
+function normalizePhone(raw) {
+  const digits = String(raw || '').replace(/\D/g, '');
+  if (!digits) return null;
+  if (digits.length < 8 || digits.length > 15) {
+    throw new ApiError(400, 'Telefon 8–15 san bolmaly (mysal: 865242856)');
+  }
+  return digits;
+}
 
 const publicUser = (user) => ({
   id: user.id,
@@ -10,6 +20,7 @@ const publicUser = (user) => ({
   role: user.role,
   isActive: user.isActive,
   canDeleteAnketa: Boolean(user.canDeleteAnketa),
+  phone: user.phone || null,
   createdAt: user.createdAt,
   updatedAt: user.updatedAt,
 });
@@ -87,6 +98,7 @@ class AuthService {
         fullName: user.fullName,
         role: user.role,
         canDeleteAnketa: Boolean(user.canDeleteAnketa),
+        phone: user.phone || null,
       },
     };
   }
@@ -96,6 +108,7 @@ class AuthService {
     const password = String(data.password || '');
     const fullName = String(data.fullName || '').trim();
     const role = data.role === 'admin' ? 'admin' : 'operator';
+    const phone = data.phone !== undefined ? normalizePhone(data.phone) : null;
 
     if (!username || username.length < 3) {
       throw new ApiError(400, 'Ulanyjy ady iň azyndan 3 harp bolmaly');
@@ -117,6 +130,7 @@ class AuthService {
       role,
       isActive: parseFlag(data.isActive, true),
       canDeleteAnketa: role === 'admin' ? false : parseFlag(data.canDeleteAnketa, false),
+      phone,
     });
 
     return publicUser(user);
@@ -214,6 +228,10 @@ class AuthService {
       user.canDeleteAnketa = false;
     }
 
+    if (data.phone !== undefined) {
+      user.phone = normalizePhone(data.phone);
+    }
+
     if (data.password) {
       if (String(data.password).length < 6) {
         throw new ApiError(400, 'Parol iň azyndan 6 harp bolmaly');
@@ -222,6 +240,7 @@ class AuthService {
     }
 
     await user.save();
+    clearAuthUserCache(user.id);
     return publicUser(user);
   }
 

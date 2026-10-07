@@ -76,6 +76,14 @@ const staffOnly = (req, res, next) => {
   return next();
 };
 
+function clearAuthUserCache(userId) {
+  if (userId == null) {
+    authUserCache.clear();
+    return;
+  }
+  authUserCache.delete(Number(userId));
+}
+
 module.exports = {
   hashPassword,
   comparePassword,
@@ -84,4 +92,5 @@ module.exports = {
   adminOnly,
   canDeleteAnketa,
   staffOnly,
+  clearAuthUserCache,
 };

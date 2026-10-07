@@ -719,6 +719,12 @@
                 <input name="username" id="user-username" required placeholder="operator2">
               </div>
               <div class="form-group">
+                <label for="user-phone">Telefon (e-poçta)</label>
+                <input name="phone" id="user-phone" type="tel" inputmode="numeric"
+                  placeholder="mysal: 865242856" autocomplete="tel">
+                <small>Anketa ugradanda aşakda şu nomer gideýär (operator üçin).</small>
+              </div>
+              <div class="form-group">
                 <label><span data-i18n="label_password">Parol</span> <span id="user-pass-hint">*</span></label>
                 <input type="password" name="password" id="user-password" data-i18n-placeholder="ph_password"
                   placeholder="iň azyndan 6 harp">
@@ -777,6 +783,7 @@
                 <th data-i18n="th_id">ID</th>
                 <th data-i18n="th_full_name">Doly ady</th>
                 <th data-i18n="th_login">Login</th>
+                <th>Telefon</th>
                 <th data-i18n="th_role">Rol</th>
                 <th data-i18n="th_is_active">Işjeňmi?</th>
                 <th>Anketa pozmak</th>
@@ -844,7 +851,7 @@
   <script src="/js/api.js?v=14"></script>
   <script src="/js/option-lists.js?v=8"></script>
   <script src="/js/comments.js?v=2"></script>
-  <script src="/js/admin.js?v=308"></script>
+  <script src="/js/admin.js?v=309"></script>
   <script>
     initTkDatePickers();
     if (window.I18n) I18n.applyI18n();
